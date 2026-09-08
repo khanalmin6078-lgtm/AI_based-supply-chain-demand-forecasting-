@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SupplyChain AI</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6fb;
+            color: #1f2d4d;
+        }
+
+        /* Navbar */
+
+        nav {
+            background: #26365f;
+            color: white;
+            padding: 20px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h2 {
+            font-size: 26px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        nav ul li a:hover {
+            color: #a8c7ff;
+        }
+
+
+        /* Hero Section */
+
+        .hero {
+            text-align: center;
+            padding: 80px 10%;
+            background: linear-gradient(135deg, #eef2ff, #ffffff);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #26365f;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: #5f6b7a;
+            max-width: 750px;
+            margin: auto;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            margin-top: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 25px;
+            margin: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .primary-btn {
+            background: #26365f;
+            color: white;
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #26365f;
+            border: 2px solid #26365f;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+
+
+        /* Statistics */
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 40px 10%;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            width: 220px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .stat-card h2 {
+            color: #26365f;
+            font-size: 30px;
+        }
+
+        .stat-card p {
+            margin-top: 8px;
+            color: #777;
+        }
+
+
+        /* Features */
+
+        .features {
+            padding: 70px 8%;
+            text-align: center;
+        }
+
+        .features h1 {
+            font-size: 36px;
+            margin-bottom: 15px;
+            color: #26365f;
+        }
+
+        .features-subtitle {
+            color: #666;
+            margin-bottom: 45px;
+            font-size: 17px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0px 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 12px;
+            color: #26365f;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+
+        /* How it works */
+
+        .workflow {
+            background: #26365f;
+            color: white;
+            padding: 70px 8%;
+            text-align: center;
+        }
+
+        .workflow h1 {
+            margin-bottom: 45px;
+            font-size: 36px;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            width: 220px;
+            padding: 25px;
+        }
+
+        .step-number {
+            width: 55px;
+            height: 55px;
+            background: white;
+            color: #26365f;
+            border-radius: 50%;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 22px;
+            margin-bottom: 18px;
+        }
+
+        .step h3 {
+            margin-bottom: 10px;
+        }
+
+        .step p {
+            color: #dce3f5;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+
+        /* CTA */
+
+        .cta {
+            text-align: center;
+            padding: 70px 10%;
+        }
+
+        .cta h1 {
+            color: #26365f;
+            margin-bottom: 15px;
+        }
+
+        .cta p {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 17px;
+        }
+
+
+        /* Footer */
+
+        footer {
+            background: #18223d;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+
+        /* Responsive */
+
+        @media(max-width: 768px) {
+
+            nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .hero h1 {
+                font-size: 34px;
+            }
+
+            .hero p {
+                font-size: 17px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- Navbar -->
+
+    <nav>
+
+        <h2>SupplyChain AI</h2>
+
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/predict">Predict</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+        </ul>
+
+    </nav>
+
+
+
+    <!-- Hero Section -->
+
+    <section class="hero">
+
+        <h1>AI-Based Supply Chain Management</h1>
+
+        <p>
+            Predict future product demand, monitor inventory,
+            identify stock-out risks and get intelligent reorder
+            recommendations using Artificial Intelligence.
+        </p>
+
+
+        <div class="hero-buttons">
+
+            <a href="/predict" class="btn primary-btn">
+                Predict Product Demand
+            </a>
+
+            <a href="/dashboard" class="btn secondary-btn">
+                View Dashboard
+            </a>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- Statistics -->
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <h2>AI</h2>
+            <p>Demand Prediction</p>
+        </div>
+
+
+        <div class="stat-card">
+            <h2>Smart</h2>
+            <p>Inventory Monitoring</p>
+        </div>
+
+
+        <div class="stat-card">
+            <h2>Real-Time</h2>
+            <p>Risk Detection</p>
+        </div>
+
+
+        <div class="stat-card">
+            <h2>Auto</h2>
+            <p>Reorder Suggestions</p>
+        </div>
+
+    </section>
+
+
+
+    <!-- Features -->
+
+    <section class="features">
+
+        <h1>Smart AI Features</h1>
+
+        <p class="features-subtitle">
+            Advanced features designed for intelligent supply chain decision making
+        </p>
+
+
+        <div class="feature-grid">
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">📈</div>
+
+                <h3>Demand Prediction</h3>
+
+                <p>
+                    Predict future product demand using Machine Learning algorithms.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">📦</div>
+
+                <h3>Smart Inventory Monitoring</h3>
+
+                <p>
+                    Monitor available stock and identify inventory shortages.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">⚠️</div>
+
+                <h3>Stock-Out Risk Detection</h3>
+
+                <p>
+                    Identify products that may run out of stock in the future.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">🔄</div>
+
+                <h3>Automatic Reorder Suggestion</h3>
+
+                <p>
+                    Get intelligent recommendations about when to reorder products.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">📊</div>
+
+                <h3>AI Dashboard</h3>
+
+                <p>
+                    Visualize inventory status and predicted product demand.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">🕒</div>
+
+                <h3>Lead Time Analysis</h3>
+
+                <p>
+                    Analyze delivery lead time to improve supply chain planning.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">🌦️</div>
+
+                <h3>Seasonal Demand Analysis</h3>
+
+                <p>
+                    Analyze seasonal patterns to understand demand fluctuations.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">🚨</div>
+
+                <h3>Smart Alerts</h3>
+
+                <p>
+                    Generate alerts for low stock and high demand situations.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">💡</div>
+
+                <h3>AI Decision Support</h3>
+
+                <p>
+                    Provide intelligent insights to help managers make better decisions.
+                </p>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">📉</div>
+
+                <h3>Sales Trend Analysis</h3>
+
+                <p>
+                    Identify sales trends and understand product performance.
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- How It Works -->
+
+    <section class="workflow">
+
+        <h1>How Our System Works</h1>
+
+
+        <div class="steps">
+
+
+            <div class="step">
+
+                <div class="step-number">1</div>
+
+                <h3>Collect Data</h3>
+
+                <p>
+                    Historical sales and inventory data is collected.
+                </p>
+
+            </div>
+
+
+
+            <div class="step">
+
+                <div class="step-number">2</div>
+
+                <h3>Train AI Model</h3>
+
+                <p>
+                    Machine Learning analyzes patterns in the data.
+                </p>
+
+            </div>
+
+
+
+            <div class="step">
+
+                <div class="step-number">3</div>
+
+                <h3>Predict Demand</h3>
+
+                <p>
+                    The AI model predicts future product demand.
+                </p>
+
+            </div>
+
+
+
+            <div class="step">
+
+                <div class="step-number">4</div>
+
+                <h3>Smart Decisions</h3>
+
+                <p>
+                    The system generates alerts and reorder recommendations.
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- Call To Action -->
+
+    <section class="cta">
+
+        <h1>Ready to Predict Future Demand?</h1>
+
+        <p>
+            Use Artificial Intelligence to make smarter supply chain decisions.
+        </p>
+
+        <a href="/predict" class="btn primary-btn">
+            Start Prediction
+        </a>
+
+    </section>
+
+
+
+    <!-- Footer -->
+
+    <footer>
+
+        <p>
+            © 2026 SupplyChain AI | AI-Based Supply Chain Management System
+        </p>
+
+    </footer>
+
+
+</body>
+
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Demand Prediction | SupplyChain AI</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #eef2f7;
+            color: #2c3e50;
+        }
+
+        /* Navbar */
+        nav {
+            background: #34466b;
+            color: white;
+            padding: 18px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h2 {
+            font-size: 24px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        nav ul li a:hover {
+            color: #dbeafe;
+        }
+
+        /* Main Container */
+        .container {
+            width: 700px;
+            max-width: 92%;
+            margin: 40px auto;
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .container h1 {
+            text-align: center;
+            color: #34466b;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Form */
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            color: #34466b;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #34466b;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 28px;
+            padding: 15px;
+            background: #34466b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #263858;
+        }
+
+        /* Result */
+        .result {
+            margin-top: 35px;
+            padding: 25px;
+            border: 2px solid #34466b;
+            border-radius: 18px;
+            text-align: center;
+            background: #f8fafc;
+        }
+
+        .result h2 {
+            color: #34466b;
+            margin-bottom: 15px;
+        }
+
+        .prediction-number {
+            font-size: 42px;
+            font-weight: bold;
+            color: #198754;
+            margin: 10px 0;
+        }
+
+        /* Recommendation */
+        .recommendation {
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 18px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .recommendation h2 {
+            color: #34466b;
+            margin-bottom: 15px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: #e2e8f0;
+            font-weight: bold;
+            color: #34466b;
+            margin: 10px 0;
+        }
+
+        .reorder-box {
+            margin-top: 20px;
+            background: #f1f5f9;
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        .reorder-number {
+            font-size: 25px;
+            font-weight: bold;
+            color: #198754;
+            margin-top: 8px;
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .back a {
+            text-decoration: none;
+            color: #34466b;
+            font-weight: bold;
+        }
+
+        /* Mobile App Style */
+        @media (max-width: 600px) {
+
+            nav {
+                padding: 15px 20px;
+            }
+
+            nav h2 {
+                font-size: 20px;
+            }
+
+            nav ul {
+                gap: 15px;
+            }
+
+            nav ul li a {
+                font-size: 14px;
+            }
+
+            .container {
+                margin: 20px auto;
+                padding: 22px;
+                border-radius: 18px;
+            }
+
+            .container h1 {
+                font-size: 25px;
+            }
+
+            .prediction-number {
+                font-size: 36px;
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <h2>SupplyChain AI</h2>
+
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/predict">Predict</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+        </ul>
+    </nav>
+
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <h1>Future Demand Prediction</h1>
+
+        <p class="subtitle">
+            Enter product details to predict future demand using AI
+        </p>
+
+
+        <form method="POST">
+
+            <!-- Product -->
+            <label>Product</label>
+
+            <select name="product" required>
+
+                <option value="Laptop">Laptop</option>
+
+                <option value="Wireless Mouse">
+                    Wireless Mouse
+                </option>
+
+                <option value="Keyboard">
+                    Keyboard
+                </option>
+
+                <option value="Monitor">
+                    Monitor
+                </option>
+
+                <option value="Headphones">
+                    Headphones
+                </option>
+
+                <option value="Smartphone">
+                    Smartphone
+                </option>
+
+                <option value="Gaming Keyboard">
+                    Gaming Keyboard
+                </option>
+
+                <option value="Printer">
+                    Printer
+                </option>
+
+                <option value="External Hard Drive">
+                    External Hard Drive
+                </option>
+
+                <option value="Tablet">
+                    Tablet
+                </option>
+
+            </select>
+
+
+            <!-- Category -->
+            <label>Category</label>
+
+            <select name="category" required>
+
+                <option value="Electronics">
+                    Electronics
+                </option>
+
+                <option value="Accessories">
+                    Accessories
+                </option>
+
+                <option value="Storage">
+                    Storage
+                </option>
+
+                <option value="Computers">
+                    Computers
+                </option>
+
+            </select>
+
+
+            <!-- Price -->
+            <label>Product Price</label>
+
+            <input
+                type="number"
+                name="price"
+                placeholder="Enter product price"
+                required
+            >
+
+
+            <!-- Discount -->
+            <label>Discount (%)</label>
+
+            <input
+                type="number"
+                name="discount"
+                placeholder="Enter discount percentage"
+                required
+            >
+
+
+            <!-- Current Stock -->
+            <label>Current Stock</label>
+
+            <input
+                type="number"
+                name="current_stock"
+                placeholder="Enter available stock"
+                required
+            >
+
+
+            <!-- Lead Time -->
+            <label>Lead Time (Days)</label>
+
+            <input
+                type="number"
+                name="lead_time"
+                placeholder="Enter supplier lead time"
+                required
+            >
+
+
+            <!-- Season -->
+            <label>Season</label>
+
+            <select name="season" required>
+
+                <option value="Winter">
+                    Winter
+                </option>
+
+                <option value="Summer">
+                    Summer
+                </option>
+
+                <option value="Monsoon">
+                    Monsoon
+                </option>
+
+            </select>
+
+
+            <!-- Button -->
+            <button type="submit">
+                Predict Future Demand 🤖
+            </button>
+
+        </form>
+
+
+        <!-- Prediction Result -->
+        {% if prediction is not none %}
+
+        <div class="result">
+
+            <h2>AI Prediction Result</h2>
+
+            <div class="prediction-number">
+                {{ prediction }}
+            </div>
+
+            <p>
+                Estimated units likely to be sold in the future
+            </p>
+
+        </div>
+
+
+        <!-- Smart Inventory Recommendation -->
+        <div class="recommendation">
+
+            <h2>📦 Smart Inventory Recommendation</h2>
+
+
+            <div class="status">
+                {{ stock_status }}
+            </div>
+
+
+            <p>
+                {{ recommendation }}
+            </p>
+
+
+            <div class="reorder-box">
+
+                <p>
+                    Recommended Reorder Quantity
+                </p>
+
+                <div class="reorder-number">
+                    {{ reorder_quantity }} Units
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <div class="back">
+            <a href="/">← Back to Home</a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
