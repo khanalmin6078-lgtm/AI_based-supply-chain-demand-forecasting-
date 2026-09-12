@@ -2,452 +2,537 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Demand Prediction | SupplyChain AI</title>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Demand Prediction</title>
 
     <style>
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
             font-family: Arial, sans-serif;
         }
 
         body {
-            background: #eef2f7;
-            color: #2c3e50;
+            background: #f4f7fb;
+            color: #222;
         }
 
-        /* Navbar */
+        /* NAVBAR */
+
         nav {
-            background: #34466b;
+            background: #111827;
             color: white;
-            padding: 18px 8%;
+            padding: 15px 30px;
+
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        nav h2 {
-            font-size: 24px;
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
         }
 
-        nav ul {
-            list-style: none;
+        .nav-links {
             display: flex;
-            gap: 30px;
+            gap: 20px;
         }
 
-        nav ul li a {
+        .nav-links a {
             color: white;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 15px;
         }
 
-        nav ul li a:hover {
-            color: #dbeafe;
+        .nav-links a:hover {
+            opacity: 0.8;
         }
 
-        /* Main Container */
+        /* MAIN */
+
         .container {
-            width: 700px;
-            max-width: 92%;
+            width: 90%;
+            max-width: 900px;
             margin: 40px auto;
-            background: white;
-            padding: 35px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
         }
 
-        .container h1 {
+        .title {
             text-align: center;
-            color: #34466b;
-            margin-bottom: 10px;
+            margin-bottom: 25px;
         }
 
-        .subtitle {
-            text-align: center;
+        .title h1 {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .title p {
             color: #666;
-            margin-bottom: 30px;
         }
 
-        /* Form */
+        /* CARD */
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+
+            box-shadow:
+                0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        /* FORM */
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
         label {
             display: block;
             font-weight: bold;
-            margin-top: 18px;
-            margin-bottom: 8px;
-            color: #34466b;
+            margin-bottom: 7px;
         }
 
         input,
         select {
             width: 100%;
-            padding: 14px;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
+            padding: 12px;
+
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+
+            font-size: 15px;
+            background: #fff;
         }
 
-        input:focus,
-        select:focus {
-            border-color: #34466b;
+        input:disabled {
+            background: #f3f4f6;
+            color: #555;
         }
 
-        button {
+        .info {
+            background: #eef6ff;
+            padding: 12px;
+            border-radius: 8px;
+
+            margin-bottom: 20px;
+
+            color: #24527a;
+            font-size: 14px;
+        }
+
+        .predict-btn {
             width: 100%;
-            margin-top: 28px;
-            padding: 15px;
-            background: #34466b;
-            color: white;
+            padding: 14px;
+
             border: none;
-            border-radius: 12px;
-            font-size: 17px;
+            border-radius: 9px;
+
+            background: #2563eb;
+            color: white;
+
+            font-size: 16px;
             font-weight: bold;
+
             cursor: pointer;
         }
 
-        button:hover {
-            background: #263858;
+        .predict-btn:hover {
+            background: #1d4ed8;
         }
 
-        /* Result */
+        /* RESULT */
+
         .result {
-            margin-top: 35px;
-            padding: 25px;
-            border: 2px solid #34466b;
-            border-radius: 18px;
-            text-align: center;
+            margin-top: 25px;
+
             background: #f8fafc;
+            border-radius: 12px;
+
+            padding: 25px;
+
+            text-align: center;
         }
 
         .result h2 {
-            color: #34466b;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .prediction-number {
-            font-size: 42px;
+            font-size: 45px;
             font-weight: bold;
-            color: #198754;
             margin: 10px 0;
         }
 
-        /* Recommendation */
         .recommendation {
-            margin-top: 25px;
-            padding: 25px;
-            border-radius: 18px;
-            background: white;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            text-align: center;
-        }
+            margin-top: 15px;
+            padding: 14px;
 
-        .recommendation h2 {
-            color: #34466b;
-            margin-bottom: 15px;
-        }
+            background: #fff7ed;
+            border-radius: 8px;
 
-        .status {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 20px;
-            background: #e2e8f0;
-            font-weight: bold;
-            color: #34466b;
-            margin: 10px 0;
-        }
-
-        .reorder-box {
-            margin-top: 20px;
-            background: #f1f5f9;
-            padding: 18px;
-            border-radius: 12px;
-        }
-
-        .reorder-number {
-            font-size: 25px;
-            font-weight: bold;
-            color: #198754;
-            margin-top: 8px;
-        }
-
-        .back {
-            text-align: center;
-            margin-top: 25px;
-        }
-
-        .back a {
-            text-decoration: none;
-            color: #34466b;
             font-weight: bold;
         }
 
-        /* Mobile App Style */
-        @media (max-width: 600px) {
+        /* GRID */
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            gap: 18px;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 700px) {
 
             nav {
-                padding: 15px 20px;
+                padding: 14px 18px;
+
+                flex-direction: column;
+                gap: 12px;
             }
 
-            nav h2 {
-                font-size: 20px;
-            }
-
-            nav ul {
-                gap: 15px;
-            }
-
-            nav ul li a {
-                font-size: 14px;
+            .nav-links {
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
             .container {
-                margin: 20px auto;
-                padding: 22px;
-                border-radius: 18px;
+                width: 94%;
+                margin: 25px auto;
             }
 
-            .container h1 {
+            .card {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .title h1 {
                 font-size: 25px;
             }
 
             .prediction-number {
-                font-size: 36px;
+                font-size: 38px;
             }
         }
 
     </style>
+
 </head>
 
 
 <body>
 
-    <!-- Navbar -->
-    <nav>
-        <h2>SupplyChain AI</h2>
+    <!-- NAVBAR -->
 
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/predict">Predict</a></li>
-            <li><a href="/dashboard">Dashboard</a></li>
-        </ul>
+    <nav>
+
+        <div class="logo">
+            SupplyChain AI
+        </div>
+
+        <div class="nav-links">
+
+            <a href="/">Home</a>
+
+            <a href="/predict">
+                Predict
+            </a>
+
+            <a href="/dashboard">
+                Dashboard
+            </a>
+
+            <a href="/upload">
+                Upload Data
+            </a>
+
+        </div>
+
     </nav>
 
 
-    <!-- Main Container -->
+    <!-- MAIN -->
+
     <div class="container">
 
-        <h1>Future Demand Prediction</h1>
+        <div class="title">
 
-        <p class="subtitle">
-            Enter product details to predict future demand using AI
-        </p>
-
-
-        <form method="POST">
-
-            <!-- Product -->
-            <label>Product</label>
-
-            <select name="product" required>
-
-                <option value="Laptop">Laptop</option>
-
-                <option value="Wireless Mouse">
-                    Wireless Mouse
-                </option>
-
-                <option value="Keyboard">
-                    Keyboard
-                </option>
-
-                <option value="Monitor">
-                    Monitor
-                </option>
-
-                <option value="Headphones">
-                    Headphones
-                </option>
-
-                <option value="Smartphone">
-                    Smartphone
-                </option>
-
-                <option value="Gaming Keyboard">
-                    Gaming Keyboard
-                </option>
-
-                <option value="Printer">
-                    Printer
-                </option>
-
-                <option value="External Hard Drive">
-                    External Hard Drive
-                </option>
-
-                <option value="Tablet">
-                    Tablet
-                </option>
-
-            </select>
-
-
-            <!-- Category -->
-            <label>Category</label>
-
-            <select name="category" required>
-
-                <option value="Electronics">
-                    Electronics
-                </option>
-
-                <option value="Accessories">
-                    Accessories
-                </option>
-
-                <option value="Storage">
-                    Storage
-                </option>
-
-                <option value="Computers">
-                    Computers
-                </option>
-
-            </select>
-
-
-            <!-- Price -->
-            <label>Product Price</label>
-
-            <input
-                type="number"
-                name="price"
-                placeholder="Enter product price"
-                required
-            >
-
-
-            <!-- Discount -->
-            <label>Discount (%)</label>
-
-            <input
-                type="number"
-                name="discount"
-                placeholder="Enter discount percentage"
-                required
-            >
-
-
-            <!-- Current Stock -->
-            <label>Current Stock</label>
-
-            <input
-                type="number"
-                name="current_stock"
-                placeholder="Enter available stock"
-                required
-            >
-
-
-            <!-- Lead Time -->
-            <label>Lead Time (Days)</label>
-
-            <input
-                type="number"
-                name="lead_time"
-                placeholder="Enter supplier lead time"
-                required
-            >
-
-
-            <!-- Season -->
-            <label>Season</label>
-
-            <select name="season" required>
-
-                <option value="Winter">
-                    Winter
-                </option>
-
-                <option value="Summer">
-                    Summer
-                </option>
-
-                <option value="Monsoon">
-                    Monsoon
-                </option>
-
-            </select>
-
-
-            <!-- Button -->
-            <button type="submit">
-                Predict Future Demand 🤖
-            </button>
-
-        </form>
-
-
-        <!-- Prediction Result -->
-        {% if prediction is not none %}
-
-        <div class="result">
-
-            <h2>AI Prediction Result</h2>
-
-            <div class="prediction-number">
-                {{ prediction }}
-            </div>
+            <h1>
+                Demand Prediction
+            </h1>
 
             <p>
-                Estimated units likely to be sold in the future
+                Predict future demand using the latest inventory data
             </p>
 
         </div>
 
 
-        <!-- Smart Inventory Recommendation -->
-        <div class="recommendation">
+        <div class="card">
 
-            <h2>📦 Smart Inventory Recommendation</h2>
+            <div class="info">
 
+                Select a product. The latest uploaded CSV data
+                will automatically fill the product details.
 
-            <div class="status">
-                {{ stock_status }}
             </div>
 
 
-            <p>
-                {{ recommendation }}
-            </p>
+            <form method="POST"
+                  action="/predict">
 
 
-            <div class="reorder-box">
+                <!-- PRODUCT -->
 
-                <p>
-                    Recommended Reorder Quantity
-                </p>
+                <div class="form-group">
 
-                <div class="reorder-number">
-                    {{ reorder_quantity }} Units
+                    <label>
+                        Product
+                    </label>
+
+                    <select
+                        name="product"
+                        id="product"
+                        required
+                        onchange="loadProductData()">
+
+                        <option value="">
+                            Select Product
+                        </option>
+
+                        {% for product in products %}
+
+                        <option
+                            value="{{ product }}"
+                            {% if selected_product == product %}
+                            selected
+                            {% endif %}>
+
+                            {{ product }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
                 </div>
 
+
+                <!-- DETAILS -->
+
+                <div class="grid">
+
+
+                    <!-- CATEGORY -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Category
+                        </label>
+
+                        <input
+                            type="text"
+                            id="category"
+                            name="category"
+                            value="{{ category }}"
+                            readonly
+                            disabled>
+
+                    </div>
+
+
+                    <!-- PRICE -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Price
+                        </label>
+
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            value="{{ price }}"
+                            readonly
+                            disabled>
+
+                    </div>
+
+
+                    <!-- DISCOUNT -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Discount (%)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="discount"
+                            name="discount"
+                            value="{{ discount }}"
+                            readonly
+                            disabled>
+
+                    </div>
+
+
+                    <!-- STOCK -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Current Stock
+                        </label>
+
+                        <input
+                            type="number"
+                            id="current_stock"
+                            name="current_stock"
+                            value="{{ current_stock }}"
+                            readonly
+                            disabled>
+
+                    </div>
+
+
+                    <!-- LEAD TIME -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Lead Time
+                        </label>
+
+                        <input
+                            type="number"
+                            id="lead_time"
+                            name="lead_time"
+                            value="{{ lead_time }}"
+                            readonly
+                            disabled>
+
+                    </div>
+
+
+                    <!-- SEASON -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Season
+                        </label>
+
+                        <input
+                            type="text"
+                            id="season"
+                            name="season"
+                            value="{{ season }}"
+                            readonly
+                            disabled>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="predict-btn">
+
+                    Predict Demand
+
+                </button>
+
+            </form>
+
+
+            <!-- RESULT -->
+
+            {% if prediction is not none %}
+
+            <div class="result">
+
+                <h2>
+                    Predicted Demand
+                </h2>
+
+                <div class="prediction-number">
+
+                    {{ prediction }}
+
+                </div>
+
+                <p>
+                    units
+                </p>
+
+
+                {% if recommendation %}
+
+                <div class="recommendation">
+
+                    {{ recommendation }}
+
+                </div>
+
+                {% endif %}
+
             </div>
 
-        </div>
+            {% endif %}
 
-        {% endif %}
-
-
-        <div class="back">
-            <a href="/">← Back to Home</a>
         </div>
 
     </div>
+
+
+    <!-- JAVASCRIPT -->
+
+    <script>
+
+        async function loadProductData() {
+
+            const product =
+                document.getElementById("product").value;
+
+            if (!product) {
+
+                return;
+
+            }
+
+            /*
+             * Product data will be loaded from
+             * the latest uploaded CSV.
+             *
+             * The backend currently fills these
+             * values after selecting the product
+             * and submitting Predict.
+             */
+
+        }
+
+    </script>
 
 </body>
 

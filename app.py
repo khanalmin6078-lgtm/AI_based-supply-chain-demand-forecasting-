@@ -5,81 +5,47 @@ import os
 
 app = Flask(__name__)
 
-# ==============================
+# -------------------------------------------------
 # FILE PATHS
-# ==============================
-
-DATASET_FOLDER = "dataset"
-
-DEFAULT_DATASET = os.path.join(
-    DATASET_FOLDER,
-    "sales_data.csv"
-)
-
-UPLOADED_DATASET = os.path.join(
-    DATASET_FOLDER,
-    "uploaded_sales_data.csv"
-)
+# -------------------------------------------------
 
 MODEL_FILE = "model.pkl"
-ENCODER_FILE = "encoders.pkl"
+HISTORICAL_DATA = "dataset/sales_data.csv"
+UPLOADED_DATA = "dataset/uploaded_sales_data.csv"
 
 
-# ==============================
-# LOAD MODEL
-# ==============================
+# -------------------------------------------------
+# LOAD TRAINED MODEL
+# -------------------------------------------------
 
 with open(MODEL_FILE, "rb") as file:
     model = pickle.load(file)
 
-
-# ==============================
-# LOAD ENCODERS
-# ==============================
-
-with open(ENCODER_FILE, "rb") as file:
-    encoders = pickle.load(file)
+print("Model loaded successfully!")
 
 
-# ==============================
-# HELPER FUNCTION
-# GET ACTIVE DATASET
-# ==============================
+# -------------------------------------------------
+# GET ACTIVE DATA
+# -------------------------------------------------
 
 def get_active_data():
 
-    # If uploaded CSV exists,
-    # use uploaded data
-    if os.path.exists(UPLOADED_DATASET):
-        return pd.read_csv(UPLOADED_DATASET)
+    if os.path.exists(UPLOADED_DATA):
+        try:
+            df = pd.read_csv(UPLOADED_DATA)
 
-    # Otherwise use default dataset
-    return pd.read_csv(DEFAULT_DATASET)
+            if not df.empty:
+                return df
 
+        except Exception:
+            pass
 
-# ==============================
-# SAFE ENCODING FUNCTION
-# Handles Unknown Categories
-# ==============================
-
-def safe_encode(column_name, value):
-
-    encoder = encoders[column_name]
-
-    value = str(value)
-
-    # If value exists in trained encoder
-    if value in encoder.classes_:
-        return encoder.transform([value])[0]
-
-    # For unknown/new value
-    # use first known class safely
-    return 0
+    return pd.read_csv(HISTORICAL_DATA)
 
 
-# ==============================
+# -------------------------------------------------
 # HOME PAGE
-# ==============================
+# -------------------------------------------------
 
 @app.route("/")
 def home():
@@ -87,504 +53,332 @@ def home():
     return render_template("index.html")
 
 
-# ==============================
+# -------------------------------------------------
 # PREDICTION PAGE
-# ==============================
+# -------------------------------------------------
 
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
 
-    # Load active dataset
     df = get_active_data()
 
-    # Get unique products
+    # Product list from latest uploaded data
     products = sorted(
-        df["Product"]
-        .dropna()
-        .astype(str)
-        .unique()
+        df["Product"].dropna().astype(str).unique().tolist()
     )
 
-    # Default values
     prediction = None
-    stock_status = None
-    reorder_quantity = None
     recommendation = None
+    selected_product = ""
+
+    # Values to automatically fill
+    category = ""
+    price = ""
+    discount = ""
+    current_stock = ""
+    lead_time = ""
+    season = ""
 
     if request.method == "POST":
 
-        try:
+        selected_product = request.form.get("product", "").strip()
 
-            # ==============================
-            # GET USER INPUT
-            # ==============================
+        # -------------------------------------------------
+        # FIND SELECTED PRODUCT IN LATEST DATA
+        # -------------------------------------------------
 
-            product = request.form["product"]
-            category = request.form["category"]
+        product_rows = df[
+            df["Product"].astype(str) == selected_product
+        ]
 
-            price = float(request.form["price"])
-            discount = float(request.form["discount"])
-            current_stock = float(
-                request.form["current_stock"]
-            )
-            lead_time = float(
-                request.form["lead_time"]
-            )
+        if not product_rows.empty:
 
-            season = request.form["season"]
+            # Use the latest uploaded snapshot row
+            row = product_rows.iloc[-1]
 
+            category = row["Category"]
+            price = row["Price"]
+            discount = row["Discount"]
+            current_stock = row["Current_Stock"]
+            lead_time = row["Lead_Time"]
+            season = row["Season"]
 
-            # ==============================
-            # SAFE ENCODING
-            # ==============================
+            # -------------------------------------------------
+            # CREATE INPUT FOR ML MODEL
+            # -------------------------------------------------
 
-            product_encoded = safe_encode(
-                "Product",
-                product
-            )
+            input_data = pd.DataFrame([
+                {
+                    "Product": selected_product,
+                    "Category": category,
+                    "Price": float(price),
+                    "Discount": float(discount),
+                    "Current_Stock": float(current_stock),
+                    "Lead_Time": float(lead_time),
+                    "Season": season
+                }
+            ])
 
-            category_encoded = safe_encode(
-                "Category",
-                category
-            )
-
-            season_encoded = safe_encode(
-                "Season",
-                season
-            )
-
-
-            # ==============================
-            # CREATE MODEL INPUT
-            # ==============================
-
-            input_data = pd.DataFrame(
-                [[
-                    product_encoded,
-                    category_encoded,
-                    price,
-                    discount,
-                    current_stock,
-                    lead_time,
-                    season_encoded
-                ]],
-                columns=[
-                    "Product",
-                    "Category",
-                    "Price",
-                    "Discount",
-                    "Current_Stock",
-                    "Lead_Time",
-                    "Season"
-                ]
-            )
-
-
-            # ==============================
-            # AI PREDICTION
-            # ==============================
+            # -------------------------------------------------
+            # PREDICT DEMAND
+            # -------------------------------------------------
 
             prediction = round(
-                float(model.predict(input_data)[0])
+                float(
+                    model.predict(input_data)[0]
+                )
             )
 
-
-            # Prevent negative prediction
+            # Prevent negative demand
             if prediction < 0:
                 prediction = 0
 
-
-            # ==============================
+            # -------------------------------------------------
             # INVENTORY RECOMMENDATION
-            # ==============================
+            # -------------------------------------------------
 
-            if current_stock < prediction:
+            if float(current_stock) < prediction:
 
-                stock_status = "Low Stock"
-
-                reorder_quantity = round(
-                    prediction
-                    - current_stock
-                    + (prediction * 0.20)
+                shortage = round(
+                    prediction - float(current_stock)
                 )
 
                 recommendation = (
-                    "Inventory is lower than predicted demand. "
-                    "Reorder stock immediately."
+                    f"Low Stock - Order approximately "
+                    f"{shortage} more units."
                 )
 
-
-            elif current_stock < prediction * 1.5:
-
-                stock_status = "Monitor"
-
-                reorder_quantity = round(
-                    prediction * 0.20
-                )
+            elif float(current_stock) <= prediction * 1.2:
 
                 recommendation = (
-                    "Stock is sufficient but should be monitored. "
-                    "Consider ordering additional inventory soon."
+                    "Monitor Stock - Inventory is close "
+                    "to predicted demand."
                 )
-
 
             else:
 
-                stock_status = "Stock Safe"
-
-                reorder_quantity = 0
-
                 recommendation = (
-                    "Inventory is sufficient. "
-                    "No immediate reorder required."
+                    "Stock Safe - Current inventory is "
+                    "sufficient."
                 )
 
-
-        except Exception as e:
-
-            recommendation = (
-                f"Prediction Error: {str(e)}"
-            )
-
-
     return render_template(
-
         "predict.html",
-
         products=products,
-
         prediction=prediction,
-
-        stock_status=stock_status,
-
-        reorder_quantity=reorder_quantity,
-
-        recommendation=recommendation
+        recommendation=recommendation,
+        selected_product=selected_product,
+        category=category,
+        price=price,
+        discount=discount,
+        current_stock=current_stock,
+        lead_time=lead_time,
+        season=season
     )
 
 
-# ==============================
+# -------------------------------------------------
 # DASHBOARD
-# ==============================
+# -------------------------------------------------
 
 @app.route("/dashboard")
 def dashboard():
 
-    # Load active dataset
     df = get_active_data()
 
+    # ---------------------------------------------
+    # PRODUCT SUMMARY
+    # ---------------------------------------------
 
-    # ==============================
-    # CLEAN DATA
-    # ==============================
-
-    df["Product"] = (
-        df["Product"]
-        .fillna("Unknown")
-        .astype(str)
-    )
-
-    df["Category"] = (
-        df["Category"]
-        .fillna("Unknown")
-        .astype(str)
-    )
-
-    df["Current_Stock"] = pd.to_numeric(
-        df["Current_Stock"],
-        errors="coerce"
-    ).fillna(0)
-
-    df["Demand"] = pd.to_numeric(
-        df["Demand"],
-        errors="coerce"
-    ).fillna(0)
-
-
-    # ==============================
-    # BASIC STATISTICS
-    # ==============================
-
-    total_products = int(len(df))
-
-
-    # Low Stock
-    low_stock = int(
-        len(
-            df[
-                df["Current_Stock"]
-                < df["Demand"]
-            ]
+    product_summary = (
+        df
+        .groupby(
+            "Product",
+            as_index=False
         )
+        .agg({
+            "Category": "first",
+            "Current_Stock": "mean",
+            "Demand": "mean"
+        })
     )
 
-
-    # Monitor
-    monitor = int(
-        len(
-            df[
-                (
-                    df["Current_Stock"]
-                    >= df["Demand"]
-                )
-                &
-                (
-                    df["Current_Stock"]
-                    < df["Demand"] * 1.5
-                )
-            ]
-        )
+    # Round values
+    product_summary["Current_Stock"] = (
+        product_summary["Current_Stock"].round(0)
     )
 
-
-    # Safe Stock
-    safe_stock = int(
-        len(
-            df[
-                df["Current_Stock"]
-                >= df["Demand"] * 1.5
-            ]
-        )
+    product_summary["Demand"] = (
+        product_summary["Demand"].round(0)
     )
 
-
-    # ==============================
+    # ---------------------------------------------
     # PRODUCT STATUS
-    # ==============================
+    # ---------------------------------------------
 
     product_data = []
 
-    for _, row in df.iterrows():
+    low_stock_count = 0
+    monitor_count = 0
+    safe_count = 0
 
-        current_stock = float(
-            row["Current_Stock"]
-        )
+    for _, row in product_summary.iterrows():
 
-        demand = float(
-            row["Demand"]
-        )
+        stock = float(row["Current_Stock"])
+        demand = float(row["Demand"])
 
-
-        # Determine Status
-        if current_stock < demand:
+        if stock < demand:
 
             status = "Low Stock"
+            low_stock_count += 1
 
-        elif current_stock < demand * 1.5:
+        elif stock <= demand * 1.2:
 
             status = "Monitor"
+            monitor_count += 1
 
         else:
 
             status = "Stock Safe"
+            safe_count += 1
 
-
-        # JSON-safe data
         product_data.append({
-
-            "Product": str(
-                row["Product"]
-            ),
-
-            "Category": str(
-                row["Category"]
-            ),
-
-            "Current_Stock": float(
-                current_stock
-            ),
-
-            "Demand": float(
-                demand
-            ),
-
-            "Status": str(
-                status
-            )
+            "Product": row["Product"],
+            "Category": row["Category"],
+            "Current_Stock": round(stock),
+            "Demand": round(demand),
+            "Status": status
         })
 
-
-    # ==============================
+    # ---------------------------------------------
     # CHART DATA
-    # JSON SAFE CONVERSION
-    # ==============================
+    # ---------------------------------------------
 
-    products = [
-        str(x)
-        for x in df["Product"].tolist()
-    ]
+    products = product_summary["Product"].tolist()
 
-    stocks = [
-        float(x)
-        for x in df["Current_Stock"].tolist()
-    ]
+    stocks = (
+        product_summary["Current_Stock"]
+        .astype(float)
+        .round(0)
+        .tolist()
+    )
 
-    demands = [
-        float(x)
-        for x in df["Demand"].tolist()
-    ]
+    demands = (
+        product_summary["Demand"]
+        .astype(float)
+        .round(0)
+        .tolist()
+    )
 
-
-    # ==============================
-    # RENDER DASHBOARD
-    # ==============================
+    total_products = len(products)
 
     return render_template(
-
         "dashboard.html",
-
         total_products=total_products,
-
-        low_stock=low_stock,
-
-        monitor=monitor,
-
-        safe_stock=safe_stock,
-
-        product_data=product_data,
-
+        low_stock=low_stock_count,
+        monitor=monitor_count,
+        safe_stock=safe_count,
         products=products,
-
         stocks=stocks,
-
-        demands=demands
+        demands=demands,
+        product_data=product_data
     )
 
 
-# ==============================
-# UPLOAD PAGE
-# ==============================
+# -------------------------------------------------
+# UPLOAD LATEST DATA
+# -------------------------------------------------
 
 @app.route("/upload", methods=["GET", "POST"])
-def upload_file():
+def upload():
 
     if request.method == "POST":
 
-        # Check file
-        if "file" not in request.files:
+        file = request.files.get("file")
 
-            return "No file selected"
+        if file is None or file.filename == "":
+            return "Please select a CSV file."
 
-
-        file = request.files["file"]
-
-
-        # Check filename
-        if file.filename == "":
-
-            return "No file selected"
-
-
-        # Check CSV extension
-        if not file.filename.lower().endswith(
-            ".csv"
-        ):
-
-            return (
-                "Please upload only CSV file."
-            )
-
+        # Check extension
+        if not file.filename.lower().endswith(".csv"):
+            return "Only CSV files are allowed."
 
         try:
 
-            # Save uploaded file
-            file.save(
-                UPLOADED_DATASET
-            )
-
-
-            # Read uploaded data
-            df = pd.read_csv(
-                UPLOADED_DATASET
-            )
-
-
-            # ==============================
-            # REQUIRED COLUMNS
-            # ==============================
-
-            required_columns = [
-
-                "Product",
-
-                "Category",
-
-                "Price",
-
-                "Discount",
-
-                "Current_Stock",
-
-                "Lead_Time",
-
-                "Season",
-
-                "Demand"
-            ]
-
-
-            # ==============================
-            # CHECK MISSING COLUMNS
-            # ==============================
-
-            missing_columns = [
-
-                column
-
-                for column
-                in required_columns
-
-                if column
-                not in df.columns
-            ]
-
-
-            if missing_columns:
-
-                # Remove invalid file
-                if os.path.exists(
-                    UPLOADED_DATASET
-                ):
-
-                    os.remove(
-                        UPLOADED_DATASET
-                    )
-
-
-                return (
-
-                    "Missing required columns: "
-
-                    + ", ".join(
-                        missing_columns
-                    )
-                )
-
-
-            # ==============================
-            # SUCCESS
-            # ==============================
-
-            return redirect(
-                url_for("dashboard")
-            )
-
+            df = pd.read_csv(file)
 
         except Exception as e:
 
+            return f"Unable to read CSV file: {e}"
+
+        # ---------------------------------------------
+        # REQUIRED COLUMNS
+        # ---------------------------------------------
+
+        required_columns = [
+            "Product",
+            "Category",
+            "Price",
+            "Discount",
+            "Current_Stock",
+            "Lead_Time",
+            "Season",
+            "Demand"
+        ]
+
+        missing_columns = [
+            column
+            for column in required_columns
+            if column not in df.columns
+        ]
+
+        if missing_columns:
+
             return (
-                f"Upload Error: {str(e)}"
+                "Missing columns: "
+                + ", ".join(missing_columns)
             )
 
+        # ---------------------------------------------
+        # CHECK EMPTY DATA
+        # ---------------------------------------------
 
-    return render_template(
-        "upload.html"
-    )
+        if df.empty:
+
+            return "Uploaded CSV is empty."
+
+        # ---------------------------------------------
+        # CREATE DATASET FOLDER
+        # ---------------------------------------------
+
+        os.makedirs(
+            "dataset",
+            exist_ok=True
+        )
+
+        # ---------------------------------------------
+        # SAVE LATEST DATA
+        # ---------------------------------------------
+
+        df.to_csv(
+            UPLOADED_DATA,
+            index=False
+        )
+
+        print(
+            "Latest data uploaded successfully!"
+        )
+
+        return redirect(
+            url_for("predict")
+        )
+
+    return render_template("upload.html")
 
 
-# ==============================
+# -------------------------------------------------
 # RUN APPLICATION
-# ==============================
+# -------------------------------------------------
 
 if __name__ == "__main__":
 
