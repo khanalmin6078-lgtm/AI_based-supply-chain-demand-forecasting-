@@ -9,9 +9,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 
 
-# ==============================
-# LOAD DATASET
-# ==============================
+# =========================================================
+# LOAD DATA
+# =========================================================
 
 df = pd.read_csv("dataset/sales_data.csv")
 
@@ -20,9 +20,21 @@ print("\nFirst 5 Records:")
 print(df.head())
 
 
-# ==============================
-# FEATURES AND TARGET
-# ==============================
+# =========================================================
+# DATE FEATURES
+# =========================================================
+
+df["Date"] = pd.to_datetime(df["Date"])
+
+df["Day"] = df["Date"].dt.day
+df["DayOfWeek"] = df["Date"].dt.dayofweek
+df["Month"] = df["Date"].dt.month
+df["WeekOfYear"] = df["Date"].dt.isocalendar().week.astype(int)
+
+
+# =========================================================
+# INPUT FEATURES
+# =========================================================
 
 X = df[
     [
@@ -32,16 +44,20 @@ X = df[
         "Discount",
         "Current_Stock",
         "Lead_Time",
-        "Season"
+        "Season",
+        "Day",
+        "DayOfWeek",
+        "Month",
+        "WeekOfYear"
     ]
 ]
 
 y = df["Demand"]
 
 
-# ==============================
-# CATEGORICAL AND NUMERICAL COLUMNS
-# ==============================
+# =========================================================
+# CATEGORICAL FEATURES
+# =========================================================
 
 categorical_features = [
     "Product",
@@ -49,17 +65,26 @@ categorical_features = [
     "Season"
 ]
 
+
+# =========================================================
+# NUMERICAL FEATURES
+# =========================================================
+
 numerical_features = [
     "Price",
     "Discount",
     "Current_Stock",
-    "Lead_Time"
+    "Lead_Time",
+    "Day",
+    "DayOfWeek",
+    "Month",
+    "WeekOfYear"
 ]
 
 
-# ==============================
+# =========================================================
 # PREPROCESSING
-# ==============================
+# =========================================================
 
 preprocessor = ColumnTransformer(
     transformers=[
@@ -79,19 +104,19 @@ preprocessor = ColumnTransformer(
 )
 
 
-# ==============================
-# CREATE MODEL
-# ==============================
+# =========================================================
+# MODEL
+# =========================================================
 
 model = RandomForestRegressor(
-    n_estimators=100,
+    n_estimators=150,
     random_state=42
 )
 
 
-# ==============================
-# CREATE PIPELINE
-# ==============================
+# =========================================================
+# PIPELINE
+# =========================================================
 
 pipeline = Pipeline(
     steps=[
@@ -101,9 +126,9 @@ pipeline = Pipeline(
 )
 
 
-# ==============================
+# =========================================================
 # TRAIN TEST SPLIT
-# ==============================
+# =========================================================
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -113,16 +138,16 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 
-# ==============================
+# =========================================================
 # TRAIN MODEL
-# ==============================
+# =========================================================
 
 pipeline.fit(X_train, y_train)
 
 
-# ==============================
-# MODEL EVALUATION
-# ==============================
+# =========================================================
+# TEST MODEL
+# =========================================================
 
 predictions = pipeline.predict(X_test)
 
@@ -131,17 +156,18 @@ mae = mean_absolute_error(
     predictions
 )
 
+
 print("\nModel trained successfully!")
-print("Mean Absolute Error:", mae)
+print("Mean Absolute Error:", round(mae, 2))
 
 
-# ==============================
+# =========================================================
 # SAVE MODEL
-# ==============================
+# =========================================================
 
 with open("model.pkl", "wb") as file:
     pickle.dump(pipeline, file)
 
 
 print("\nNew model.pkl saved successfully!")
-print("Unknown products will now be handled safely!")
+print("Date-based future prediction is ready!")

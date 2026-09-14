@@ -2,316 +2,309 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Dashboard | SupplyChain AI</title>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Inventory Dashboard</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
             font-family: Arial, sans-serif;
         }
 
         body {
-            background: #eef1f5;
-            color: #2f4058;
+            background: #f4f7fb;
+            color: #222;
         }
 
-        /* ================= NAVBAR ================= */
+        /* NAVBAR */
 
         nav {
-            background: #435575;
+            background: #111827;
             color: white;
-            padding: 18px 70px;
+
+            padding: 15px 30px;
 
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        nav h2 {
-            font-size: 28px;
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
         }
 
-        nav ul {
+        .nav-links {
             display: flex;
-            list-style: none;
-            gap: 35px;
+            gap: 20px;
         }
 
-        nav ul li a {
+        .nav-links a {
             color: white;
             text-decoration: none;
-            font-size: 17px;
+            font-size: 15px;
         }
 
-        nav ul li a:hover {
-            color: #bcd3f5;
-        }
-
-
-        /* ================= CONTAINER ================= */
+        /* CONTAINER */
 
         .container {
+
             width: 92%;
-            margin: auto;
-            padding: 40px 0;
+            max-width: 1200px;
+
+            margin: 35px auto;
+
         }
 
+        .title {
 
-        /* ================= HEADING ================= */
-
-        .heading {
             text-align: center;
-            margin-bottom: 35px;
+
+            margin-bottom: 30px;
+
         }
 
-        .heading h1 {
-            font-size: 34px;
-            margin-bottom: 10px;
+        .title h1 {
+
+            font-size: 30px;
+
+            margin-bottom: 8px;
+
         }
 
-        .heading p {
-            font-size: 17px;
-            color: #667085;
+        .title p {
+
+            color: #666;
+
         }
 
+        /* STATS */
 
-        /* ================= STATS CARDS ================= */
-
-        .stats-container {
+        .stats {
 
             display: grid;
 
             grid-template-columns:
                 repeat(4, 1fr);
 
-            gap: 20px;
+            gap: 18px;
 
             margin-bottom: 30px;
-        }
 
+        }
 
         .stat-card {
 
             background: white;
 
-            padding: 28px;
+            padding: 22px;
 
-            border-radius: 15px;
+            border-radius: 14px;
+
+            box-shadow:
+                0 5px 18px rgba(0,0,0,0.07);
 
             text-align: center;
 
-            box-shadow:
-                0 5px 20px
-                rgba(0, 0, 0, 0.08);
         }
-
 
         .stat-card h3 {
 
-            font-size: 17px;
+            font-size: 15px;
 
-            margin-bottom: 15px;
+            color: #666;
 
-            color: #53627a;
+            margin-bottom: 10px;
+
         }
 
+        .stat-card .number {
 
-        .stat-card h2 {
+            font-size: 32px;
 
-            font-size: 34px;
+            font-weight: bold;
+
         }
 
+        /* CHART CARDS */
 
-        .total {
-            color: #435575;
-        }
-
-        .low {
-            color: #d9534f;
-        }
-
-        .monitor {
-            color: #e39b18;
-        }
-
-        .safe {
-            color: #2e8b57;
-        }
-
-
-        /* ================= CHART BOX ================= */
-
-        .chart-box {
+        .chart-card {
 
             background: white;
 
-            padding: 30px;
+            padding: 25px;
 
-            margin-bottom: 30px;
-
-            border-radius: 15px;
+            border-radius: 14px;
 
             box-shadow:
-                0 5px 20px
-                rgba(0, 0, 0, 0.08);
-        }
-
-
-        .chart-box h2 {
+                0 5px 18px rgba(0,0,0,0.07);
 
             margin-bottom: 25px;
 
-            font-size: 26px;
         }
 
+        .chart-card h2 {
+
+            font-size: 20px;
+
+            margin-bottom: 20px;
+
+        }
 
         .chart-container {
 
-            position: relative;
+            height: 350px;
 
-            height: 450px;
         }
 
+        /* TABLE */
 
-        /* ================= TABLE ================= */
-
-        .table-box {
+        .table-card {
 
             background: white;
 
-            padding: 30px;
+            padding: 25px;
 
-            border-radius: 15px;
+            border-radius: 14px;
 
             box-shadow:
-                0 5px 20px
-                rgba(0, 0, 0, 0.08);
+                0 5px 18px rgba(0,0,0,0.07);
 
-            margin-bottom: 40px;
+            overflow-x: auto;
+
         }
 
+        .table-card h2 {
 
-        .table-box h2 {
+            margin-bottom: 20px;
 
-            margin-bottom: 25px;
-
-            font-size: 26px;
         }
-
 
         table {
 
             width: 100%;
 
             border-collapse: collapse;
+
+            min-width: 750px;
+
         }
 
+        th,
+        td {
+
+            padding: 13px;
+
+            text-align: left;
+
+            border-bottom: 1px solid #e5e7eb;
+
+        }
 
         th {
 
-            background: #435575;
+            background: #f8fafc;
 
-            color: white;
-
-            padding: 15px;
-
-            text-align: left;
         }
 
+        /* RISK */
 
-        td {
-
-            padding: 15px;
-
-            border-bottom:
-                1px solid #ddd;
-        }
-
-
-        tr:hover {
-
-            background: #f5f7fa;
-        }
-
-
-        /* ================= STATUS BADGES ================= */
-
-        .status {
-
-            padding: 8px 15px;
-
-            border-radius: 20px;
-
-            font-size: 14px;
+        .risk {
 
             font-weight: bold;
-        }
-
-
-        .low-stock {
-
-            background: #fde2e2;
-
-            color: #c0392b;
-        }
-
-
-        .monitor-stock {
-
-            background: #fff3cd;
-
-            color: #b7791f;
-        }
-
-
-        .safe-stock {
-
-            background: #d9f3e5;
-
-            color: #287a4d;
-        }
-
-
-        /* ================= RESPONSIVE ================= */
-
-        @media (max-width: 900px) {
-
-            .stats-container {
-
-                grid-template-columns:
-                    repeat(2, 1fr);
-            }
 
         }
 
+        .high {
 
-        @media (max-width: 600px) {
+            color: #dc2626;
+
+        }
+
+        .medium {
+
+            color: #d97706;
+
+        }
+
+        .low {
+
+            color: #16a34a;
+
+        }
+
+        .reorder {
+
+            font-weight: bold;
+
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 800px) {
 
             nav {
 
-                padding: 15px 20px;
-
                 flex-direction: column;
 
-                gap: 15px;
+                gap: 12px;
+
             }
 
-            .stats-container {
+            .nav-links {
+
+                flex-wrap: wrap;
+
+                justify-content: center;
+
+                gap: 12px;
+
+            }
+
+            .stats {
+
+                grid-template-columns: 1fr 1fr;
+
+            }
+
+        }
+
+        @media (max-width: 500px) {
+
+            .container {
+
+                width: 94%;
+
+                margin: 25px auto;
+
+            }
+
+            .stats {
 
                 grid-template-columns: 1fr;
+
             }
 
-            nav ul {
+            .chart-container {
 
-                gap: 15px;
+                height: 280px;
+
+            }
+
+            .title h1 {
+
+                font-size: 25px;
+
             }
 
         }
@@ -324,129 +317,260 @@
 <body>
 
 
-<!-- ================= NAVBAR ================= -->
+    <!-- NAVBAR -->
 
-<nav>
+    <nav>
 
-    <h2>SupplyChain AI</h2>
+        <div class="logo">
+            SupplyChain AI
+        </div>
 
-    <ul>
+        <div class="nav-links">
 
-        <li>
-            <a href="/">Home</a>
-        </li>
+            <a href="/">
+                Home
+            </a>
 
-        <li>
-            <a href="/predict">Predict</a>
-        </li>
+            <a href="/predict">
+                Predict
+            </a>
 
-        <li>
-            <a href="/dashboard">Dashboard</a>
-        </li>
+            <a href="/dashboard">
+                Dashboard
+            </a>
 
-        <li>
-            <a href="/upload">Upload Data</a>
-        </li>
+            <a href="/upload">
+                Upload Data
+            </a>
 
-    </ul>
+        </div>
 
-</nav>
-
-
-
-<!-- ================= MAIN CONTENT ================= -->
-
-<div class="container">
+    </nav>
 
 
-    <!-- ================= HEADING ================= -->
+    <!-- MAIN -->
 
-    <div class="heading">
-
-        <h1>
-            Inventory Dashboard 📊
-        </h1>
-
-        <p>
-            Monitor inventory levels and analyze product demand
-        </p>
-
-    </div>
+    <div class="container">
 
 
+        <div class="title">
 
-    <!-- ================= STATISTICS ================= -->
+            <h1>
+                Inventory Dashboard
+            </h1>
 
-    <div class="stats-container">
+            <p>
+                Demand, stock risk and reorder analysis
+            </p>
+
+        </div>
 
 
-        <!-- TOTAL PRODUCTS -->
+        <!-- STAT CARDS -->
 
-        <div class="stat-card">
+        <div class="stats">
 
-            <h3>
-                📦 Total Products
-            </h3>
 
-            <h2 class="total">
+            <div class="stat-card">
 
-                {{ total_products }}
+                <h3>
+                    Total Products
+                </h3>
 
+                <div class="number">
+                    {{ total_products }}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <h3>
+                    🔴 High Risk
+                </h3>
+
+                <div class="number high">
+                    {{ high_risk }}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <h3>
+                    🟡 Medium Risk
+                </h3>
+
+                <div class="number medium">
+                    {{ medium_risk }}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <h3>
+                    🟢 Low Risk
+                </h3>
+
+                <div class="number low">
+                    {{ low_risk }}
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- STOCK VS DEMAND -->
+
+        <div class="chart-card">
+
+            <h2>
+                Stock vs Demand Analysis
             </h2>
 
+            <div class="chart-container">
+
+                <canvas id="stockDemandChart"></canvas>
+
+            </div>
+
         </div>
 
 
+        <!-- DEMAND TREND -->
 
-        <!-- LOW STOCK -->
+        <div class="chart-card">
 
-        <div class="stat-card">
-
-            <h3>
-                ⚠️ Low Stock
-            </h3>
-
-            <h2 class="low">
-
-                {{ low_stock }}
-
+            <h2>
+                Product Demand Trend
             </h2>
 
+            <div class="chart-container">
+
+                <canvas id="demandChart"></canvas>
+
+            </div>
+
         </div>
 
 
+        <!-- PRODUCT TABLE -->
 
-        <!-- MONITOR -->
+        <div class="table-card">
 
-        <div class="stat-card">
-
-            <h3>
-                👀 Monitor
-            </h3>
-
-            <h2 class="monitor">
-
-                {{ monitor }}
-
+            <h2>
+                Product Inventory & Risk Status
             </h2>
 
-        </div>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Product
+                        </th>
+
+                        <th>
+                            Category
+                        </th>
+
+                        <th>
+                            Current Stock
+                        </th>
+
+                        <th>
+                            Demand
+                        </th>
+
+                        <th>
+                            Stock-Out Risk
+                        </th>
+
+                        <th>
+                            Reorder Quantity
+                        </th>
+
+                    </tr>
+
+                </thead>
 
 
+                <tbody>
 
-        <!-- SAFE STOCK -->
+                    {% for item in product_data %}
 
-        <div class="stat-card">
+                    <tr>
 
-            <h3>
-                ✅ Stock Safe
-            </h3>
+                        <td>
+                            {{ item.Product }}
+                        </td>
 
-            <h2 class="safe">
+                        <td>
+                            {{ item.Category }}
+                        </td>
 
-                {{ safe_stock }}
+                        <td>
+                            {{ item.Current_Stock }}
+                        </td>
 
-            </h2>
+                        <td>
+                            {{ item.Demand }}
+                        </td>
+
+                        <td>
+
+                            {% if item.Risk == "High Risk" %}
+
+                            <span class="risk high">
+                                🔴 High Risk
+                            </span>
+
+                            {% elif item.Risk == "Medium Risk" %}
+
+                            <span class="risk medium">
+                                🟡 Medium Risk
+                            </span>
+
+                            {% else %}
+
+                            <span class="risk low">
+                                🟢 Low Risk
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td class="reorder">
+
+                            {% if item.Reorder > 0 %}
+
+                                {{ item.Reorder }} units
+
+                            {% else %}
+
+                                No reorder
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
 
         </div>
 
@@ -454,406 +578,71 @@
     </div>
 
 
+    <!-- CHART JAVASCRIPT -->
 
-    <!-- ================= BAR CHART ================= -->
+    <script>
 
-    <div class="chart-box">
+        const products =
+            {{ products | tojson }};
 
-        <h2>
-            📊 Stock vs Demand Analysis
-        </h2>
+        const stocks =
+            {{ stocks | tojson }};
 
-        <div class="chart-container">
+        const demands =
+            {{ demands | tojson }};
 
-            <canvas
-                id="stockDemandChart">
-            </canvas>
 
-        </div>
+        // --------------------------------------------
+        // STOCK VS DEMAND
+        // --------------------------------------------
 
-    </div>
+        new Chart(
 
+            document.getElementById(
+                "stockDemandChart"
+            ),
 
+            {
 
-    <!-- ================= LINE CHART ================= -->
+                type: "bar",
 
-    <div class="chart-box">
+                data: {
 
-        <h2>
-            📈 Product Demand Trend
-        </h2>
+                    labels: products,
 
-        <div class="chart-container">
+                    datasets: [
 
-            <canvas
-                id="demandTrendChart">
-            </canvas>
+                        {
 
-        </div>
+                            label: "Current Stock",
 
-    </div>
+                            data: stocks
 
+                        },
 
+                        {
 
-    <!-- ================= PRODUCT TABLE ================= -->
+                            label: "Demand",
 
-    <div class="table-box">
+                            data: demands
 
-        <h2>
-            Product Inventory Status
-        </h2>
+                        }
 
-
-        <table>
-
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Product
-                    </th>
-
-                    <th>
-                        Category
-                    </th>
-
-                    <th>
-                        Current Stock
-                    </th>
-
-                    <th>
-                        Demand
-                    </th>
-
-                    <th>
-                        Status
-                    </th>
-
-                </tr>
-
-            </thead>
-
-
-
-            <tbody>
-
-
-                {% for item in product_data %}
-
-                <tr>
-
-                    <td>
-
-                        {{ item.Product }}
-
-                    </td>
-
-
-                    <td>
-
-                        {{ item.Category }}
-
-                    </td>
-
-
-                    <td>
-
-                        {{ item.Current_Stock }}
-
-                    </td>
-
-
-                    <td>
-
-                        {{ item.Demand }}
-
-                    </td>
-
-
-                    <td>
-
-
-                        {% if item.Status == "Low Stock" %}
-
-                        <span
-                            class="status low-stock">
-
-                            Low Stock
-
-                        </span>
-
-
-                        {% elif item.Status == "Monitor" %}
-
-                        <span
-                            class="status monitor-stock">
-
-                            Monitor
-
-                        </span>
-
-
-                        {% else %}
-
-                        <span
-                            class="status safe-stock">
-
-                            Stock Safe
-
-                        </span>
-
-
-                        {% endif %}
-
-
-                    </td>
-
-
-                </tr>
-
-
-                {% endfor %}
-
-
-            </tbody>
-
-
-        </table>
-
-
-    </div>
-
-
-</div>
-
-
-
-<!-- ================= JAVASCRIPT ================= -->
-
-<script>
-
-
-    /* ==============================
-       STOCK VS DEMAND BAR CHART
-    ============================== */
-
-
-    const stockDemandCtx =
-        document
-        .getElementById(
-            "stockDemandChart"
-        )
-        .getContext("2d");
-
-
-    new Chart(
-        stockDemandCtx,
-        {
-
-            type: "bar",
-
-
-            data: {
-
-
-                labels:
-                    {{ products | tojson }},
-
-
-                datasets: [
-
-
-                    {
-
-                        label:
-                            "Current Stock",
-
-
-                        data:
-                            {{ stocks | tojson }},
-
-
-                        backgroundColor:
-                            "rgba(67, 85, 117, 0.75)",
-
-
-                        borderColor:
-                            "rgba(67, 85, 117, 1)",
-
-
-                        borderWidth: 1
-
-                    },
-
-
-                    {
-
-                        label:
-                            "Demand",
-
-
-                        data:
-                            {{ demands | tojson }},
-
-
-                        backgroundColor:
-                            "rgba(46, 139, 87, 0.65)",
-
-
-                        borderColor:
-                            "rgba(46, 139, 87, 1)",
-
-
-                        borderWidth: 1
-
-                    }
-
-                ]
-
-            },
-
-
-            options: {
-
-
-                responsive: true,
-
-
-                maintainAspectRatio: false,
-
-
-                plugins: {
-
-
-                    legend: {
-
-                        position: "top"
-
-                    }
+                    ]
 
                 },
 
+                options: {
 
-                scales: {
+                    responsive: true,
 
+                    maintainAspectRatio: false,
 
-                    y: {
+                    scales: {
 
-                        beginAtZero: true
+                        y: {
 
-                    }
-
-                }
-
-            }
-
-        }
-    );
-
-
-
-    /* ==============================
-       PRODUCT DEMAND TREND
-    ============================== */
-
-
-    const demandTrendCtx =
-        document
-        .getElementById(
-            "demandTrendChart"
-        )
-        .getContext("2d");
-
-
-    new Chart(
-        demandTrendCtx,
-        {
-
-            type: "line",
-
-
-            data: {
-
-
-                labels:
-                    {{ products | tojson }},
-
-
-                datasets: [
-
-
-                    {
-
-                        label:
-                            "Product Demand",
-
-
-                        data:
-                            {{ demands | tojson }},
-
-
-                        borderColor:
-                            "#435575",
-
-
-                        backgroundColor:
-                            "rgba(67, 85, 117, 0.15)",
-
-
-                        fill: true,
-
-
-                        tension: 0.4,
-
-
-                        pointBackgroundColor:
-                            "#2e8b57",
-
-
-                        pointRadius: 6
-
-                    }
-
-                ]
-
-            },
-
-
-            options: {
-
-
-                responsive: true,
-
-
-                maintainAspectRatio: false,
-
-
-                plugins: {
-
-
-                    legend: {
-
-                        position: "top"
-
-                    }
-
-                },
-
-
-                scales: {
-
-
-                    y: {
-
-                        beginAtZero: true,
-
-                        title: {
-
-                            display: true,
-
-                            text: "Demand Units"
+                            beginAtZero: true
 
                         }
 
@@ -863,11 +652,66 @@
 
             }
 
-        }
-    );
+        );
 
 
-</script>
+        // --------------------------------------------
+        // DEMAND TREND
+        // --------------------------------------------
+
+        new Chart(
+
+            document.getElementById(
+                "demandChart"
+            ),
+
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels: products,
+
+                    datasets: [
+
+                        {
+
+                            label: "Product Demand",
+
+                            data: demands,
+
+                            tension: 0.3
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    </script>
 
 
 </body>

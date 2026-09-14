@@ -2,13 +2,12 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Demand Prediction</title>
+    <title>Future Demand Prediction</title>
 
     <style>
 
@@ -89,6 +88,19 @@
                 0 5px 20px rgba(0,0,0,0.08);
         }
 
+        /* INFO */
+
+        .info {
+            background: #eef6ff;
+            padding: 12px;
+            border-radius: 8px;
+
+            margin-bottom: 20px;
+
+            color: #24527a;
+            font-size: 14px;
+        }
+
         /* FORM */
 
         .form-group {
@@ -118,16 +130,19 @@
             color: #555;
         }
 
-        .info {
-            background: #eef6ff;
-            padding: 12px;
-            border-radius: 8px;
-
+        .date-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 15px;
             margin-bottom: 20px;
-
-            color: #24527a;
-            font-size: 14px;
         }
+
+        .date-box label {
+            color: #166534;
+        }
+
+        /* BUTTON */
 
         .predict-btn {
             width: 100%;
@@ -147,6 +162,19 @@
 
         .predict-btn:hover {
             background: #1d4ed8;
+        }
+
+        /* ERROR */
+
+        .error {
+            margin-top: 15px;
+            padding: 12px;
+
+            background: #fee2e2;
+            color: #991b1b;
+
+            border-radius: 8px;
+            font-weight: bold;
         }
 
         /* RESULT */
@@ -170,6 +198,35 @@
             font-size: 45px;
             font-weight: bold;
             margin: 10px 0;
+        }
+
+        .prediction-date {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .risk {
+            margin-top: 18px;
+            padding: 12px;
+
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .high {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .medium {
+            background: #fef9c3;
+            color: #a16207;
+        }
+
+        .low {
+            background: #dcfce7;
+            color: #15803d;
         }
 
         .recommendation {
@@ -273,11 +330,11 @@
         <div class="title">
 
             <h1>
-                Demand Prediction
+                Future Demand Prediction
             </h1>
 
             <p>
-                Predict future demand using the latest inventory data
+                Predict product demand for a selected future date
             </p>
 
         </div>
@@ -287,14 +344,37 @@
 
             <div class="info">
 
-                Select a product. The latest uploaded CSV data
-                will automatically fill the product details.
+                Select a future date and product.
+                The AI model will predict the expected demand
+                for that date.
 
             </div>
 
 
             <form method="POST"
                   action="/predict">
+
+
+                <!-- DATE -->
+
+                <div class="date-box">
+
+                    <div class="form-group">
+
+                        <label>
+                            📅 Prediction Date
+                        </label>
+
+                        <input
+                            type="date"
+                            name="prediction_date"
+                            id="prediction_date"
+                            value="{{ prediction_date }}"
+                            required>
+
+                    </div>
+
+                </div>
 
 
                 <!-- PRODUCT -->
@@ -308,8 +388,7 @@
                     <select
                         name="product"
                         id="product"
-                        required
-                        onchange="loadProductData()">
+                        required>
 
                         <option value="">
                             Select Product
@@ -349,8 +428,6 @@
 
                         <input
                             type="text"
-                            id="category"
-                            name="category"
                             value="{{ category }}"
                             readonly
                             disabled>
@@ -368,8 +445,6 @@
 
                         <input
                             type="number"
-                            id="price"
-                            name="price"
                             value="{{ price }}"
                             readonly
                             disabled>
@@ -387,8 +462,6 @@
 
                         <input
                             type="number"
-                            id="discount"
-                            name="discount"
                             value="{{ discount }}"
                             readonly
                             disabled>
@@ -406,8 +479,6 @@
 
                         <input
                             type="number"
-                            id="current_stock"
-                            name="current_stock"
                             value="{{ current_stock }}"
                             readonly
                             disabled>
@@ -425,8 +496,6 @@
 
                         <input
                             type="number"
-                            id="lead_time"
-                            name="lead_time"
                             value="{{ lead_time }}"
                             readonly
                             disabled>
@@ -444,8 +513,6 @@
 
                         <input
                             type="text"
-                            id="season"
-                            name="season"
                             value="{{ season }}"
                             readonly
                             disabled>
@@ -459,11 +526,24 @@
                     type="submit"
                     class="predict-btn">
 
-                    Predict Demand
+                    🔮 Predict Future Demand
 
                 </button>
 
             </form>
+
+
+            <!-- ERROR -->
+
+            {% if error %}
+
+            <div class="error">
+
+                {{ error }}
+
+            </div>
+
+            {% endif %}
 
 
             <!-- RESULT -->
@@ -473,8 +553,27 @@
             <div class="result">
 
                 <h2>
-                    Predicted Demand
+                    🤖 Future Demand Prediction
                 </h2>
+
+                <div class="prediction-date">
+
+                    📅 Date:
+                    <strong>
+                        {{ prediction_date }}
+                    </strong>
+
+                </div>
+
+                <div class="prediction-date">
+
+                    📦 Product:
+                    <strong>
+                        {{ selected_product }}
+                    </strong>
+
+                </div>
+
 
                 <div class="prediction-number">
 
@@ -483,15 +582,49 @@
                 </div>
 
                 <p>
-                    units
+                    units expected demand
                 </p>
 
+
+                <!-- RISK -->
+
+                {% if risk == "High Risk" %}
+
+                <div class="risk high">
+
+                    🔴 Stock-Out Risk:
+                    {{ risk }}
+
+                </div>
+
+                {% elif risk == "Medium Risk" %}
+
+                <div class="risk medium">
+
+                    🟡 Stock-Out Risk:
+                    {{ risk }}
+
+                </div>
+
+                {% else %}
+
+                <div class="risk low">
+
+                    🟢 Stock-Out Risk:
+                    {{ risk }}
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- REORDER -->
 
                 {% if recommendation %}
 
                 <div class="recommendation">
 
-                    {{ recommendation }}
+                    📦 {{ recommendation }}
 
                 </div>
 
@@ -504,35 +637,6 @@
         </div>
 
     </div>
-
-
-    <!-- JAVASCRIPT -->
-
-    <script>
-
-        async function loadProductData() {
-
-            const product =
-                document.getElementById("product").value;
-
-            if (!product) {
-
-                return;
-
-            }
-
-            /*
-             * Product data will be loaded from
-             * the latest uploaded CSV.
-             *
-             * The backend currently fills these
-             * values after selecting the product
-             * and submitting Predict.
-             */
-
-        }
-
-    </script>
 
 </body>
 
