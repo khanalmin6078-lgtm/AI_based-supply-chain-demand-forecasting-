@@ -26,12 +26,11 @@
             color: #222;
         }
 
-        /* NAVBAR */
+        /* ================= NAVBAR ================= */
 
         nav {
             background: #111827;
             color: white;
-
             padding: 15px 30px;
 
             display: flex;
@@ -55,258 +54,197 @@
             font-size: 15px;
         }
 
-        /* CONTAINER */
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        /* ================= CONTAINER ================= */
 
         .container {
-
             width: 92%;
             max-width: 1200px;
-
             margin: 35px auto;
-
         }
 
         .title {
-
             text-align: center;
-
             margin-bottom: 30px;
-
         }
 
         .title h1 {
-
             font-size: 30px;
-
             margin-bottom: 8px;
-
         }
 
         .title p {
-
             color: #666;
-
         }
 
-        /* STATS */
+        /* ================= STATS ================= */
 
         .stats {
-
             display: grid;
-
-            grid-template-columns:
-                repeat(4, 1fr);
-
+            grid-template-columns: repeat(4, 1fr);
             gap: 18px;
-
             margin-bottom: 30px;
-
         }
 
         .stat-card {
-
             background: white;
-
             padding: 22px;
-
             border-radius: 14px;
 
             box-shadow:
                 0 5px 18px rgba(0,0,0,0.07);
 
             text-align: center;
-
         }
 
         .stat-card h3 {
-
             font-size: 15px;
-
             color: #666;
-
             margin-bottom: 10px;
-
         }
 
         .stat-card .number {
-
             font-size: 32px;
-
             font-weight: bold;
-
         }
 
-        /* CHART CARDS */
+        /* ================= CHART CARDS ================= */
 
         .chart-card {
-
             background: white;
-
             padding: 25px;
-
             border-radius: 14px;
 
             box-shadow:
                 0 5px 18px rgba(0,0,0,0.07);
 
             margin-bottom: 25px;
-
         }
 
         .chart-card h2 {
-
             font-size: 20px;
-
             margin-bottom: 20px;
-
         }
 
         .chart-container {
-
             height: 350px;
-
         }
 
-        /* TABLE */
+        /* ================= SEASONAL INFO ================= */
+
+        .season-info {
+            background: #eef6ff;
+            padding: 18px;
+            border-radius: 10px;
+
+            margin-bottom: 20px;
+
+            text-align: center;
+
+            font-size: 16px;
+        }
+
+        .season-info strong {
+            font-size: 18px;
+        }
+
+        /* ================= TABLE ================= */
 
         .table-card {
-
             background: white;
-
             padding: 25px;
-
             border-radius: 14px;
 
             box-shadow:
                 0 5px 18px rgba(0,0,0,0.07);
 
             overflow-x: auto;
-
         }
 
         .table-card h2 {
-
             margin-bottom: 20px;
-
         }
 
         table {
-
             width: 100%;
-
             border-collapse: collapse;
-
             min-width: 750px;
-
         }
 
         th,
         td {
-
             padding: 13px;
-
             text-align: left;
-
             border-bottom: 1px solid #e5e7eb;
-
         }
 
         th {
-
             background: #f8fafc;
-
         }
 
-        /* RISK */
+        /* ================= RISK ================= */
 
         .risk {
-
             font-weight: bold;
-
         }
 
         .high {
-
             color: #dc2626;
-
         }
 
         .medium {
-
             color: #d97706;
-
         }
 
         .low {
-
             color: #16a34a;
-
         }
 
         .reorder {
-
             font-weight: bold;
-
         }
 
-        /* MOBILE */
+        /* ================= MOBILE ================= */
 
         @media (max-width: 800px) {
 
             nav {
-
                 flex-direction: column;
-
                 gap: 12px;
-
             }
 
             .nav-links {
-
                 flex-wrap: wrap;
-
                 justify-content: center;
-
                 gap: 12px;
-
             }
 
             .stats {
-
                 grid-template-columns: 1fr 1fr;
-
             }
-
         }
 
         @media (max-width: 500px) {
 
             .container {
-
                 width: 94%;
-
                 margin: 25px auto;
-
             }
 
             .stats {
-
                 grid-template-columns: 1fr;
-
             }
 
             .chart-container {
-
                 height: 280px;
-
             }
 
             .title h1 {
-
                 font-size: 25px;
-
             }
-
         }
 
     </style>
@@ -317,7 +255,7 @@
 <body>
 
 
-    <!-- NAVBAR -->
+    <!-- ================= NAVBAR ================= -->
 
     <nav>
 
@@ -348,10 +286,12 @@
     </nav>
 
 
-    <!-- MAIN -->
+    <!-- ================= MAIN ================= -->
 
     <div class="container">
 
+
+        <!-- TITLE -->
 
         <div class="title">
 
@@ -366,7 +306,7 @@
         </div>
 
 
-        <!-- STAT CARDS -->
+        <!-- ================= STAT CARDS ================= -->
 
         <div class="stats">
 
@@ -426,7 +366,7 @@
         </div>
 
 
-        <!-- STOCK VS DEMAND -->
+        <!-- ================= STOCK VS DEMAND ================= -->
 
         <div class="chart-card">
 
@@ -443,7 +383,7 @@
         </div>
 
 
-        <!-- DEMAND TREND -->
+        <!-- ================= PRODUCT DEMAND ================= -->
 
         <div class="chart-card">
 
@@ -460,7 +400,44 @@
         </div>
 
 
-        <!-- PRODUCT TABLE -->
+        <!-- ================= SEASONAL DEMAND ================= -->
+
+        <div class="chart-card">
+
+            <h2>
+                🌦️ Seasonal Demand Analysis
+            </h2>
+
+
+            <div class="season-info">
+
+                🏆 Highest Demand Season:
+
+                <strong>
+                    {{ highest_demand_season }}
+                </strong>
+
+                <br>
+
+                Average Demand:
+
+                <strong>
+                    {{ highest_season_demand }} units
+                </strong>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas id="seasonalDemandChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= PRODUCT TABLE ================= -->
 
         <div class="table-card">
 
@@ -550,6 +527,7 @@
 
                         </td>
 
+
                         <td class="reorder">
 
                             {% if item.Reorder > 0 %}
@@ -578,23 +556,36 @@
     </div>
 
 
-    <!-- CHART JAVASCRIPT -->
+    <!-- ================= JAVASCRIPT ================= -->
 
     <script>
+
+
+        /* ================= DATA FROM FLASK ================= */
 
         const products =
             {{ products | tojson }};
 
+
         const stocks =
             {{ stocks | tojson }};
+
 
         const demands =
             {{ demands | tojson }};
 
 
-        // --------------------------------------------
-        // STOCK VS DEMAND
-        // --------------------------------------------
+        const seasons =
+            {{ seasons | tojson }};
+
+
+        const seasonDemands =
+            {{ season_demands | tojson }};
+
+
+        /* =================================================
+           STOCK VS DEMAND CHART
+        ================================================= */
 
         new Chart(
 
@@ -655,9 +646,9 @@
         );
 
 
-        // --------------------------------------------
-        // DEMAND TREND
-        // --------------------------------------------
+        /* =================================================
+           PRODUCT DEMAND TREND
+        ================================================= */
 
         new Chart(
 
@@ -710,6 +701,62 @@
             }
 
         );
+
+
+        /* =================================================
+           SEASONAL DEMAND ANALYSIS
+        ================================================= */
+
+        new Chart(
+
+            document.getElementById(
+                "seasonalDemandChart"
+            ),
+
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels: seasons,
+
+                    datasets: [
+
+                        {
+
+                            label: "Average Demand",
+
+                            data: seasonDemands
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
 
     </script>
 
