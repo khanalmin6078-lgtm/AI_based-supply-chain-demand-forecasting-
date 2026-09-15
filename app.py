@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import pandas as pd
 import pickle
 import os
+import json
 from datetime import datetime, date
 
 
@@ -17,6 +18,8 @@ MODEL_FILE = "model.pkl"
 HISTORICAL_DATA = "dataset/sales_data.csv"
 
 UPLOADED_DATA = "dataset/uploaded_sales_data.csv"
+
+PREDICTION_FILE = "prediction_result.json"
 
 
 # =========================================================
@@ -51,6 +54,47 @@ def get_active_data():
 
 
 # =========================================================
+# SAVE LAST PREDICTION
+# =========================================================
+
+def save_prediction(result):
+
+    with open(
+        PREDICTION_FILE,
+        "w"
+    ) as file:
+
+        json.dump(
+            result,
+            file,
+            indent=4
+        )
+
+
+# =========================================================
+# LOAD LAST PREDICTION
+# =========================================================
+
+def load_prediction():
+
+    if not os.path.exists(PREDICTION_FILE):
+        return None
+
+    try:
+
+        with open(
+            PREDICTION_FILE,
+            "r"
+        ) as file:
+
+            return json.load(file)
+
+    except Exception:
+
+        return None
+
+
+# =========================================================
 # GET SEASON FROM DATE
 # =========================================================
 
@@ -58,17 +102,17 @@ def get_season_from_date(prediction_date):
 
     month = prediction_date.month
 
-    # March, April, May
+    # March - May
     if month in [3, 4, 5]:
 
         return "Summer"
 
-    # June, July, August, September
+    # June - September
     elif month in [6, 7, 8, 9]:
 
         return "Monsoon"
 
-    # October to February
+    # October - February
     else:
 
         return "Winter"
@@ -99,11 +143,11 @@ def calculate_risk(stock, demand):
 
 def calculate_reorder(stock, demand):
 
-    # 20% safety stock
-
     recommended_stock = demand * 1.20
 
-    reorder_quantity = recommended_stock - stock
+    reorder_quantity = (
+        recommended_stock - stock
+    )
 
     if reorder_quantity < 0:
 
@@ -119,35 +163,37 @@ def calculate_reorder(stock, demand):
 @app.route("/")
 def home():
 
-    return render_template("index.html")
+    return render_template(
+        "index.html"
+    )
 
 
 # =========================================================
 # FUTURE DEMAND PREDICTION
 # =========================================================
 
-@app.route("/predict", methods=["GET", "POST"])
+@app.route(
+    "/predict",
+    methods=["GET", "POST"]
+)
 def predict():
 
     df = get_active_data()
 
 
-    # -----------------------------------------------------
-    # PRODUCT LIST
-    # -----------------------------------------------------
-
+    # Product list
     products = sorted(
+
         df["Product"]
         .dropna()
         .astype(str)
         .unique()
         .tolist()
+
     )
 
 
-    # -----------------------------------------------------
-    # DEFAULT VALUES
-    # -----------------------------------------------------
+    # Default values
 
     prediction = None
 
@@ -177,25 +223,17 @@ def predict():
 
 
     # =====================================================
-    # POST REQUEST
+    # POST
     # =====================================================
 
     if request.method == "POST":
 
-
-        # -------------------------------------------------
-        # PRODUCT
-        # -------------------------------------------------
 
         selected_product = request.form.get(
             "product",
             ""
         ).strip()
 
-
-        # -------------------------------------------------
-        # PREDICTION DATE
-        # -------------------------------------------------
 
         prediction_date = request.form.get(
             "prediction_date",
@@ -204,7 +242,7 @@ def predict():
 
 
         # -------------------------------------------------
-        # VALIDATE PRODUCT
+        # PRODUCT VALIDATION
         # -------------------------------------------------
 
         if not selected_product:
@@ -213,7 +251,7 @@ def predict():
 
 
         # -------------------------------------------------
-        # VALIDATE DATE
+        # DATE VALIDATION
         # -------------------------------------------------
 
         elif not prediction_date:
@@ -231,7 +269,6 @@ def predict():
                 ).date()
 
 
-                # Today's date
                 today = date.today()
 
 
@@ -246,35 +283,38 @@ def predict():
             except ValueError:
 
                 error = (
-                    "Invalid date format. "
+                    "Invalid date. "
                     "Please select a valid date."
                 )
 
 
         # =================================================
-        # PRODUCT DATA
+        # GET PRODUCT DETAILS
         # =================================================
 
         if error is None:
 
 
             product_rows = df[
-                df["Product"].astype(str)
+
+                df["Product"]
+                .astype(str)
                 == selected_product
+
             ]
 
 
             if product_rows.empty:
 
                 error = (
-                    "Selected product was not found "
-                    "in the data."
+                    "Selected product was not found."
                 )
 
 
             else:
 
-                # Get latest available record
+                # Latest available product record
+
                 row = product_rows.iloc[-1]
 
 
@@ -289,9 +329,7 @@ def predict():
                 lead_time = row["Lead_Time"]
 
 
-                # -------------------------------------------------
-                # SEASON FROM FUTURE DATE
-                # -------------------------------------------------
+                # Season based on selected future date
 
                 season = get_season_from_date(
                     selected_date
@@ -307,7 +345,9 @@ def predict():
 
                     day = selected_date.day
 
-                    day_of_week = selected_date.weekday()
+                    day_of_week = (
+                        selected_date.weekday()
+                    )
 
                     month = selected_date.month
 
@@ -324,35 +364,46 @@ def predict():
 
                         {
 
-                            "Product": selected_product,
+                            "Product":
+                                selected_product,
 
-                            "Category": category,
+                            "Category":
+                                category,
 
-                            "Price": float(price),
+                            "Price":
+                                float(price),
 
-                            "Discount": float(discount),
+                            "Discount":
+                                float(discount),
 
-                            "Current_Stock": float(
-                                current_stock
-                            ),
+                            "Current_Stock":
+                                float(
+                                    current_stock
+                                ),
 
-                            "Lead_Time": float(
-                                lead_time
-                            ),
+                            "Lead_Time":
+                                float(
+                                    lead_time
+                                ),
 
-                            "Season": season,
+                            "Season":
+                                season,
 
-                            "Day": int(day),
+                            "Day":
+                                int(day),
 
-                            "DayOfWeek": int(
-                                day_of_week
-                            ),
+                            "DayOfWeek":
+                                int(
+                                    day_of_week
+                                ),
 
-                            "Month": int(month),
+                            "Month":
+                                int(month),
 
-                            "WeekOfYear": int(
-                                week_of_year
-                            )
+                            "WeekOfYear":
+                                int(
+                                    week_of_year
+                                )
 
                         }
 
@@ -360,7 +411,7 @@ def predict():
 
 
                     # =================================================
-                    # ML PREDICTION
+                    # PREDICTION
                     # =================================================
 
                     prediction = round(
@@ -376,15 +427,13 @@ def predict():
                     )
 
 
-                    # Prevent negative demand
-
                     if prediction < 0:
 
                         prediction = 0
 
 
                     # =================================================
-                    # STOCK RISK
+                    # RISK
                     # =================================================
 
                     risk = calculate_risk(
@@ -400,12 +449,14 @@ def predict():
                     # REORDER
                     # =================================================
 
-                    reorder_quantity = calculate_reorder(
+                    reorder_quantity = (
+                        calculate_reorder(
 
-                        float(current_stock),
+                            float(current_stock),
 
-                        prediction
+                            prediction
 
+                        )
                     )
 
 
@@ -429,6 +480,55 @@ def predict():
                             "No additional stock is required."
 
                         )
+
+
+                    # =================================================
+                    # SAVE LAST PREDICTION
+                    # =================================================
+
+                    prediction_result = {
+
+                        "product":
+                            selected_product,
+
+                        "date":
+                            prediction_date,
+
+                        "category":
+                            str(category),
+
+                        "price":
+                            float(price),
+
+                        "discount":
+                            float(discount),
+
+                        "current_stock":
+                            float(current_stock),
+
+                        "lead_time":
+                            float(lead_time),
+
+                        "season":
+                            season,
+
+                        "predicted_demand":
+                            int(prediction),
+
+                        "risk":
+                            risk,
+
+                        "reorder_quantity":
+                            int(
+                                reorder_quantity
+                            )
+
+                    }
+
+
+                    save_prediction(
+                        prediction_result
+                    )
 
 
                 except Exception as e:
@@ -484,7 +584,10 @@ def predict():
 # DASHBOARD
 # =========================================================
 
-@app.route("/dashboard")
+@app.route(
+    "/dashboard",
+    methods=["GET"]
+)
 def dashboard():
 
     df = get_active_data()
@@ -516,18 +619,26 @@ def dashboard():
     )
 
 
-    product_summary["Current_Stock"] = (
+    product_summary[
+        "Current_Stock"
+    ] = (
 
-        product_summary["Current_Stock"]
+        product_summary[
+            "Current_Stock"
+        ]
 
         .round(0)
 
     )
 
 
-    product_summary["Demand"] = (
+    product_summary[
+        "Demand"
+    ] = (
 
-        product_summary["Demand"]
+        product_summary[
+            "Demand"
+        ]
 
         .round(0)
 
@@ -549,7 +660,7 @@ def dashboard():
 
 
     # =====================================================
-    # PRODUCT ANALYSIS
+    # ALL PRODUCT ANALYSIS
     # =====================================================
 
     for _, row in product_summary.iterrows():
@@ -568,8 +679,6 @@ def dashboard():
         )
 
 
-        # Risk
-
         risk = calculate_risk(
 
             stock,
@@ -578,8 +687,6 @@ def dashboard():
 
         )
 
-
-        # Reorder
 
         reorder_quantity = calculate_reorder(
 
@@ -590,49 +697,51 @@ def dashboard():
         )
 
 
-        # Count risks
-
         if risk == "High Risk":
 
             high_risk_count += 1
 
-
         elif risk == "Medium Risk":
 
             medium_risk_count += 1
-
 
         else:
 
             low_risk_count += 1
 
 
-        # Product data
-
         product_data.append({
 
-            "Product": product,
+            "Product":
+                product,
 
-            "Category": row["Category"],
+            "Category":
+                row["Category"],
 
-            "Current_Stock": round(stock),
+            "Current_Stock":
+                round(stock),
 
-            "Demand": round(demand),
+            "Demand":
+                round(demand),
 
-            "Risk": risk,
+            "Risk":
+                risk,
 
-            "Reorder": reorder_quantity
+            "Reorder":
+                reorder_quantity
 
         })
 
 
     # =====================================================
-    # PRODUCT CHART DATA
+    # GRAPH DATA
     # =====================================================
 
     products = (
 
-        product_summary["Product"]
+        product_summary[
+            "Product"
+        ]
 
         .tolist()
 
@@ -641,7 +750,9 @@ def dashboard():
 
     stocks = (
 
-        product_summary["Current_Stock"]
+        product_summary[
+            "Current_Stock"
+        ]
 
         .astype(float)
 
@@ -654,7 +765,9 @@ def dashboard():
 
     demands = (
 
-        product_summary["Demand"]
+        product_summary[
+            "Demand"
+        ]
 
         .astype(float)
 
@@ -665,7 +778,9 @@ def dashboard():
     )
 
 
-    total_products = len(products)
+    total_products = len(
+        products
+    )
 
 
     # =====================================================
@@ -690,16 +805,18 @@ def dashboard():
     )
 
 
-    season_summary["Demand"] = (
+    season_summary[
+        "Demand"
+    ] = (
 
-        season_summary["Demand"]
+        season_summary[
+            "Demand"
+        ]
 
         .round(0)
 
     )
 
-
-    # Keep the seasons in a fixed order
 
     season_order = [
 
@@ -712,9 +829,13 @@ def dashboard():
     ]
 
 
-    season_summary["Season"] = pd.Categorical(
+    season_summary[
+        "Season"
+    ] = pd.Categorical(
 
-        season_summary["Season"],
+        season_summary[
+            "Season"
+        ],
 
         categories=season_order,
 
@@ -723,18 +844,17 @@ def dashboard():
     )
 
 
-    season_summary = season_summary.sort_values(
-
-        "Season"
-
+    season_summary = (
+        season_summary
+        .sort_values("Season")
     )
 
 
-    # Season names
-
     seasons = (
 
-        season_summary["Season"]
+        season_summary[
+            "Season"
+        ]
 
         .astype(str)
 
@@ -743,11 +863,11 @@ def dashboard():
     )
 
 
-    # Season demand
-
     season_demands = (
 
-        season_summary["Demand"]
+        season_summary[
+            "Demand"
+        ]
 
         .astype(float)
 
@@ -757,17 +877,18 @@ def dashboard():
 
 
     # =====================================================
-    # HIGHEST DEMAND SEASON
+    # HIGHEST SEASON
     # =====================================================
 
     if len(season_demands) > 0:
 
-
-        highest_demand_index = (
+        highest_index = (
 
             season_demands.index(
 
-                max(season_demands)
+                max(
+                    season_demands
+                )
 
             )
 
@@ -776,20 +897,22 @@ def dashboard():
 
         highest_demand_season = (
 
-            seasons[highest_demand_index]
+            seasons[
+                highest_index
+            ]
 
         )
 
 
         highest_season_demand = (
 
-            season_demands[highest_demand_index]
+            season_demands[
+                highest_index
+            ]
 
         )
 
-
     else:
-
 
         highest_demand_season = "N/A"
 
@@ -797,36 +920,133 @@ def dashboard():
 
 
     # =====================================================
-    # DASHBOARD PAGE
+    # LAST PREDICTION
+    # =====================================================
+
+    last_prediction = (
+        load_prediction()
+    )
+
+
+    # =====================================================
+    # SELECTED PRODUCT TABLE
+    # =====================================================
+
+    selected_product_data = []
+
+
+    if last_prediction:
+
+
+        selected_product_name = (
+            last_prediction["product"]
+        )
+
+
+        selected_stock = float(
+            last_prediction[
+                "current_stock"
+            ]
+        )
+
+
+        selected_predicted_demand = float(
+            last_prediction[
+                "predicted_demand"
+            ]
+        )
+
+
+        selected_risk = (
+            last_prediction["risk"]
+        )
+
+
+        selected_reorder = int(
+            last_prediction[
+                "reorder_quantity"
+            ]
+        )
+
+
+        selected_product_data.append({
+
+            "Product":
+                selected_product_name,
+
+            "Category":
+                last_prediction[
+                    "category"
+                ],
+
+            "Current_Stock":
+                round(
+                    selected_stock
+                ),
+
+            "Demand":
+                round(
+                    selected_predicted_demand
+                ),
+
+            "Risk":
+                selected_risk,
+
+            "Reorder":
+                selected_reorder
+
+        })
+
+
+    # =====================================================
+    # DASHBOARD
     # =====================================================
 
     return render_template(
 
         "dashboard.html",
 
-        total_products=total_products,
+        total_products=
+            total_products,
 
-        high_risk=high_risk_count,
+        high_risk=
+            high_risk_count,
 
-        medium_risk=medium_risk_count,
+        medium_risk=
+            medium_risk_count,
 
-        low_risk=low_risk_count,
+        low_risk=
+            low_risk_count,
 
-        products=products,
+        products=
+            products,
 
-        stocks=stocks,
+        stocks=
+            stocks,
 
-        demands=demands,
+        demands=
+            demands,
 
-        product_data=product_data,
+        product_data=
+            selected_product_data,
 
-        seasons=seasons,
+        all_product_data=
+            product_data,
 
-        season_demands=season_demands,
+        seasons=
+            seasons,
 
-        highest_demand_season=highest_demand_season,
+        season_demands=
+            season_demands,
 
-        highest_season_demand=highest_season_demand
+        highest_demand_season=
+            highest_demand_season,
+
+        highest_season_demand=
+            highest_season_demand,
+
+        last_prediction=
+            last_prediction
 
     )
 
@@ -835,13 +1055,12 @@ def dashboard():
 # UPLOAD DATA
 # =========================================================
 
-@app.route("/upload", methods=["GET", "POST"])
+@app.route(
+    "/upload",
+    methods=["GET", "POST"]
+)
 def upload():
 
-
-    # =====================================================
-    # GET
-    # =====================================================
 
     if request.method == "GET":
 
@@ -856,11 +1075,9 @@ def upload():
         )
 
 
-    # =====================================================
-    # GET FILE
-    # =====================================================
-
-    file = request.files.get("file")
+    file = request.files.get(
+        "file"
+    )
 
 
     if file is None or file.filename == "":
@@ -876,11 +1093,9 @@ def upload():
         )
 
 
-    # =====================================================
-    # CHECK FILE TYPE
-    # =====================================================
-
-    if not file.filename.lower().endswith(".csv"):
+    if not file.filename.lower().endswith(
+        ".csv"
+    ):
 
         return render_template(
 
@@ -895,10 +1110,6 @@ def upload():
 
         )
 
-
-    # =====================================================
-    # READ CSV
-    # =====================================================
 
     try:
 
@@ -920,10 +1131,6 @@ def upload():
         )
 
 
-    # =====================================================
-    # EMPTY CHECK
-    # =====================================================
-
     if df.empty:
 
         return render_template(
@@ -936,10 +1143,6 @@ def upload():
 
         )
 
-
-    # =====================================================
-    # REQUIRED COLUMNS
-    # =====================================================
 
     required_columns = [
 
@@ -981,7 +1184,6 @@ def upload():
 
             error=(
 
-                "Invalid CSV format. "
                 "Missing columns: "
 
                 + ", ".join(
@@ -995,36 +1197,30 @@ def upload():
         )
 
 
-    # =====================================================
-    # BLANK CHECK
-    # =====================================================
-
     blank_columns = []
 
 
     for column in required_columns:
 
-
         if df[column].isna().any():
 
-            blank_columns.append(column)
-
+            blank_columns.append(
+                column
+            )
 
         elif (
 
             df[column]
-
             .astype(str)
-
             .str.strip()
-
             .eq("")
-
             .any()
 
         ):
 
-            blank_columns.append(column)
+            blank_columns.append(
+                column
+            )
 
 
     if blank_columns:
@@ -1035,7 +1231,7 @@ def upload():
 
             error=(
 
-                "Blank or missing values found in: "
+                "Blank values found in: "
 
                 + ", ".join(
                     blank_columns
@@ -1047,10 +1243,6 @@ def upload():
 
         )
 
-
-    # =====================================================
-    # NUMERIC CHECK
-    # =====================================================
 
     numeric_columns = [
 
@@ -1067,11 +1259,10 @@ def upload():
     ]
 
 
-    invalid_numeric_columns = []
+    invalid_numeric = []
 
 
     for column in numeric_columns:
-
 
         converted = pd.to_numeric(
 
@@ -1084,12 +1275,12 @@ def upload():
 
         if converted.isna().any():
 
-            invalid_numeric_columns.append(
+            invalid_numeric.append(
                 column
             )
 
 
-    if invalid_numeric_columns:
+    if invalid_numeric:
 
         return render_template(
 
@@ -1097,11 +1288,10 @@ def upload():
 
             error=(
 
-                "These columns must contain "
-                "numeric values: "
+                "Invalid numeric values in: "
 
                 + ", ".join(
-                    invalid_numeric_columns
+                    invalid_numeric
                 )
 
             ),
@@ -1109,69 +1299,18 @@ def upload():
             success=None
 
         )
-
-
-    # =====================================================
-    # NEGATIVE CHECK
-    # =====================================================
-
-    negative_columns = []
 
 
     for column in numeric_columns:
 
-
-        values = pd.to_numeric(
-
-            df[column],
-
-            errors="coerce"
-
+        df[column] = pd.to_numeric(
+            df[column]
         )
 
 
-        if (values < 0).any():
-
-            negative_columns.append(
-                column
-            )
-
-
-    if negative_columns:
-
-        return render_template(
-
-            "upload.html",
-
-            error=(
-
-                "Negative values are not allowed in: "
-
-                + ", ".join(
-                    negative_columns
-                )
-
-            ),
-
-            success=None
-
-        )
-
-
-    # =====================================================
-    # DISCOUNT CHECK
-    # =====================================================
-
-    discount_values = pd.to_numeric(
-
-        df["Discount"],
-
-        errors="coerce"
-
-    )
-
-
-    if (discount_values > 100).any():
+    if (
+        df["Discount"] > 100
+    ).any():
 
         return render_template(
 
@@ -1186,29 +1325,26 @@ def upload():
         )
 
 
-    # =====================================================
-    # CONVERT NUMERIC COLUMNS
-    # =====================================================
+    if (
+        df[numeric_columns] < 0
+    ).any().any():
 
-    for column in numeric_columns:
+        return render_template(
 
-        df[column] = pd.to_numeric(
+            "upload.html",
 
-            df[column]
+            error=(
+                "Negative values are not allowed."
+            ),
+
+            success=None
 
         )
 
 
-    # =====================================================
-    # SAVE UPLOADED DATA
-    # =====================================================
-
     os.makedirs(
-
         "dataset",
-
         exist_ok=True
-
     )
 
 
@@ -1227,14 +1363,12 @@ def upload():
 
 
     return redirect(
-
         url_for("predict")
-
     )
 
 
 # =========================================================
-# RUN APPLICATION
+# RUN
 # =========================================================
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@
             color: #222;
         }
 
+
         /* ================= NAVBAR ================= */
 
         nav {
@@ -54,9 +55,6 @@
             font-size: 15px;
         }
 
-        .nav-links a:hover {
-            opacity: 0.8;
-        }
 
         /* ================= CONTAINER ================= */
 
@@ -65,6 +63,7 @@
             max-width: 1200px;
             margin: 35px auto;
         }
+
 
         .title {
             text-align: center;
@@ -79,6 +78,7 @@
         .title p {
             color: #666;
         }
+
 
         /* ================= STATS ================= */
 
@@ -111,11 +111,56 @@
             font-weight: bold;
         }
 
-        /* ================= CHART CARDS ================= */
+        .high {
+            color: #dc2626;
+        }
+
+        .medium {
+            color: #d97706;
+        }
+
+        .low {
+            color: #16a34a;
+        }
+
+
+        /* ================= SELECTED PREDICTION ================= */
+
+        .prediction-info {
+            background: white;
+            padding: 20px;
+
+            border-radius: 14px;
+
+            box-shadow:
+                0 5px 18px rgba(0,0,0,0.07);
+
+            margin-bottom: 25px;
+
+            text-align: center;
+        }
+
+        .prediction-info h2 {
+            margin-bottom: 10px;
+        }
+
+        .prediction-info p {
+            margin: 5px;
+            color: #555;
+        }
+
+        .prediction-info strong {
+            color: #111827;
+        }
+
+
+        /* ================= CHART ================= */
 
         .chart-card {
             background: white;
+
             padding: 25px;
+
             border-radius: 14px;
 
             box-shadow:
@@ -133,11 +178,14 @@
             height: 350px;
         }
 
-        /* ================= SEASONAL INFO ================= */
+
+        /* ================= SEASON ================= */
 
         .season-info {
             background: #eef6ff;
+
             padding: 18px;
+
             border-radius: 10px;
 
             margin-bottom: 20px;
@@ -151,11 +199,14 @@
             font-size: 18px;
         }
 
+
         /* ================= TABLE ================= */
 
         .table-card {
             background: white;
+
             padding: 25px;
+
             border-radius: 14px;
 
             box-shadow:
@@ -170,20 +221,50 @@
 
         table {
             width: 100%;
+
             border-collapse: collapse;
+
             min-width: 750px;
         }
 
         th,
         td {
             padding: 13px;
+
             text-align: left;
-            border-bottom: 1px solid #e5e7eb;
+
+            border-bottom:
+                1px solid #e5e7eb;
         }
 
         th {
             background: #f8fafc;
         }
+
+
+        /* ================= SELECTED ROW ================= */
+
+        .selected-row {
+            background: #eef6ff;
+            font-weight: 500;
+        }
+
+        .selected-badge {
+            display: inline-block;
+
+            margin-left: 8px;
+
+            padding: 4px 8px;
+
+            border-radius: 10px;
+
+            background: #2563eb;
+
+            color: white;
+
+            font-size: 11px;
+        }
+
 
         /* ================= RISK ================= */
 
@@ -191,21 +272,22 @@
             font-weight: bold;
         }
 
-        .high {
+        .risk-high {
             color: #dc2626;
         }
 
-        .medium {
+        .risk-medium {
             color: #d97706;
         }
 
-        .low {
+        .risk-low {
             color: #16a34a;
         }
 
         .reorder {
             font-weight: bold;
         }
+
 
         /* ================= MOBILE ================= */
 
@@ -227,6 +309,7 @@
             }
         }
 
+
         @media (max-width: 500px) {
 
             .container {
@@ -245,6 +328,7 @@
             .title h1 {
                 font-size: 25px;
             }
+
         }
 
     </style>
@@ -286,12 +370,10 @@
     </nav>
 
 
-    <!-- ================= MAIN ================= -->
-
     <div class="container">
 
 
-        <!-- TITLE -->
+        <!-- ================= TITLE ================= -->
 
         <div class="title">
 
@@ -306,7 +388,53 @@
         </div>
 
 
-        <!-- ================= STAT CARDS ================= -->
+        <!-- ================= LAST PREDICTION ================= -->
+
+        {% if last_prediction %}
+
+        <div class="prediction-info">
+
+            <h2>
+                🤖 Latest Future Prediction
+            </h2>
+
+            <p>
+
+                📅 Date:
+
+                <strong>
+                    {{ last_prediction.date }}
+                </strong>
+
+            </p>
+
+            <p>
+
+                📦 Product:
+
+                <strong>
+                    {{ last_prediction.product }}
+                </strong>
+
+            </p>
+
+            <p>
+
+                📈 Predicted Demand:
+
+                <strong>
+                    {{ last_prediction.predicted_demand }}
+                    units
+                </strong>
+
+            </p>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= STATS ================= -->
 
         <div class="stats">
 
@@ -422,7 +550,8 @@
                 Average Demand:
 
                 <strong>
-                    {{ highest_season_demand }} units
+                    {{ highest_season_demand }}
+                    units
                 </strong>
 
             </div>
@@ -446,6 +575,21 @@
             </h2>
 
 
+            {% if last_prediction %}
+
+            <p style="
+                margin-bottom:18px;
+                color:#555;
+            ">
+
+                Showing the product from your
+                latest future prediction.
+
+            </p>
+
+            {% endif %}
+
+
             <table>
 
                 <thead>
@@ -465,7 +609,7 @@
                         </th>
 
                         <th>
-                            Demand
+                            Predicted Demand
                         </th>
 
                         <th>
@@ -483,44 +627,65 @@
 
                 <tbody>
 
+                    {% if product_data %}
+
+
                     {% for item in product_data %}
 
-                    <tr>
+                    <tr class="selected-row">
 
                         <td>
+
+                            ⭐
+
                             {{ item.Product }}
+
+                            <span class="selected-badge">
+                                Selected
+                            </span>
+
                         </td>
+
 
                         <td>
                             {{ item.Category }}
                         </td>
 
+
                         <td>
                             {{ item.Current_Stock }}
                         </td>
+
 
                         <td>
                             {{ item.Demand }}
                         </td>
 
+
                         <td>
 
                             {% if item.Risk == "High Risk" %}
 
-                            <span class="risk high">
+                            <span class="risk risk-high">
+
                                 🔴 High Risk
+
                             </span>
 
                             {% elif item.Risk == "Medium Risk" %}
 
-                            <span class="risk medium">
+                            <span class="risk risk-medium">
+
                                 🟡 Medium Risk
+
                             </span>
 
                             {% else %}
 
-                            <span class="risk low">
+                            <span class="risk risk-low">
+
                                 🟢 Low Risk
+
                             </span>
 
                             {% endif %}
@@ -546,6 +711,32 @@
 
                     {% endfor %}
 
+
+                    {% else %}
+
+                    <tr>
+
+                        <td colspan="6"
+                            style="
+                            text-align:center;
+                            padding:25px;
+                            color:#777;
+                            ">
+
+                            No future prediction available yet.
+
+                            <br><br>
+
+                            Go to
+                            <strong>Predict</strong>
+                            and generate a prediction.
+
+                        </td>
+
+                    </tr>
+
+                    {% endif %}
+
                 </tbody>
 
             </table>
@@ -561,7 +752,9 @@
     <script>
 
 
-        /* ================= DATA FROM FLASK ================= */
+        // =================================================
+        // BASIC GRAPH DATA
+        // =================================================
 
         const products =
             {{ products | tojson }};
@@ -575,6 +768,10 @@
             {{ demands | tojson }};
 
 
+        // =================================================
+        // SEASON DATA
+        // =================================================
+
         const seasons =
             {{ seasons | tojson }};
 
@@ -583,9 +780,54 @@
             {{ season_demands | tojson }};
 
 
-        /* =================================================
-           STOCK VS DEMAND CHART
-        ================================================= */
+        // =================================================
+        // SELECTED PRODUCT
+        // =================================================
+
+        const selectedProduct =
+
+            {% if last_prediction %}
+
+                {{ last_prediction.product | tojson }}
+
+            {% else %}
+
+                null
+
+            {% endif %};
+
+
+        // =================================================
+        // HIGHLIGHT SELECTED PRODUCT
+        // =================================================
+
+        const stockColors =
+            products.map(
+
+                product =>
+
+                    product === selectedProduct
+                        ? "#2563eb"
+                        : "#90caf9"
+
+            );
+
+
+        const demandColors =
+            products.map(
+
+                product =>
+
+                    product === selectedProduct
+                        ? "#f97316"
+                        : "#f9a8b8"
+
+            );
+
+
+        // =================================================
+        // STOCK VS DEMAND
+        // =================================================
 
         new Chart(
 
@@ -605,17 +847,27 @@
 
                         {
 
-                            label: "Current Stock",
+                            label:
+                                "Current Stock",
 
-                            data: stocks
+                            data:
+                                stocks,
+
+                            backgroundColor:
+                                stockColors
 
                         },
 
                         {
 
-                            label: "Demand",
+                            label:
+                                "Demand",
 
-                            data: demands
+                            data:
+                                demands,
+
+                            backgroundColor:
+                                demandColors
 
                         }
 
@@ -646,9 +898,21 @@
         );
 
 
-        /* =================================================
-           PRODUCT DEMAND TREND
-        ================================================= */
+        // =================================================
+        // PRODUCT DEMAND TREND
+        // =================================================
+
+        const trendColors =
+            products.map(
+
+                product =>
+
+                    product === selectedProduct
+                        ? "#2563eb"
+                        : "#f9a8b8"
+
+            );
+
 
         new Chart(
 
@@ -668,11 +932,21 @@
 
                         {
 
-                            label: "Product Demand",
+                            label:
+                                "Product Demand",
 
-                            data: demands,
+                            data:
+                                demands,
 
-                            tension: 0.3
+                            borderColor:
+                                "#2563eb",
+
+                            backgroundColor:
+                                trendColors,
+
+                            tension: 0.3,
+
+                            pointRadius: 6
 
                         }
 
@@ -703,9 +977,9 @@
         );
 
 
-        /* =================================================
-           SEASONAL DEMAND ANALYSIS
-        ================================================= */
+        // =================================================
+        // SEASONAL DEMAND
+        // =================================================
 
         new Chart(
 
@@ -725,9 +999,11 @@
 
                         {
 
-                            label: "Average Demand",
+                            label:
+                                "Average Demand",
 
-                            data: seasonDemands
+                            data:
+                                seasonDemands
 
                         }
 
