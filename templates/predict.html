@@ -428,9 +428,10 @@
 
                         <input
                             type="text"
+                            name="category"
+                            id="category"
                             value="{{ category }}"
-                            readonly
-                            disabled>
+                            required>
 
                     </div>
 
@@ -445,9 +446,12 @@
 
                         <input
                             type="number"
+                            name="price"
+                            id="price"
                             value="{{ price }}"
-                            readonly
-                            disabled>
+                            min="0"
+                            step="0.01"
+                            required>
 
                     </div>
 
@@ -462,9 +466,13 @@
 
                         <input
                             type="number"
+                            name="discount"
+                            id="discount"
                             value="{{ discount }}"
-                            readonly
-                            disabled>
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            required>
 
                     </div>
 
@@ -479,9 +487,12 @@
 
                         <input
                             type="number"
+                            name="current_stock"
+                            id="current_stock"
                             value="{{ current_stock }}"
-                            readonly
-                            disabled>
+                            min="0"
+                            step="1"
+                            required>
 
                     </div>
 
@@ -496,9 +507,12 @@
 
                         <input
                             type="number"
+                            name="lead_time"
+                            id="lead_time"
                             value="{{ lead_time }}"
-                            readonly
-                            disabled>
+                            min="0"
+                            step="1"
+                            required>
 
                     </div>
 
@@ -513,9 +527,10 @@
 
                         <input
                             type="text"
+                            name="season"
+                            id="season"
                             value="{{ season }}"
-                            readonly
-                            disabled>
+                            readonly>
 
                     </div>
 
@@ -637,6 +652,76 @@
         </div>
 
     </div>
+
+
+    <script>
+
+        // Product details coming from the latest CSV.
+        const productDetails = {{ product_details | tojson }};
+
+        const productSelect = document.getElementById("product");
+        const categoryInput = document.getElementById("category");
+        const priceInput = document.getElementById("price");
+        const discountInput = document.getElementById("discount");
+        const stockInput = document.getElementById("current_stock");
+        const leadTimeInput = document.getElementById("lead_time");
+        const dateInput = document.getElementById("prediction_date");
+        const seasonInput = document.getElementById("season");
+
+        // Auto-fill details when a product is selected.
+        productSelect.addEventListener("change", function () {
+
+            const product = this.value;
+            const details = productDetails[product];
+
+            if (!details) {
+                categoryInput.value = "";
+                priceInput.value = "";
+                discountInput.value = "";
+                stockInput.value = "";
+                leadTimeInput.value = "";
+                return;
+            }
+
+            categoryInput.value = details.category;
+            priceInput.value = details.price;
+            discountInput.value = details.discount;
+            stockInput.value = details.current_stock;
+            leadTimeInput.value = details.lead_time;
+        });
+
+        // Automatically calculate season from the selected date.
+        function updateSeason() {
+
+            if (!dateInput.value) {
+                seasonInput.value = "";
+                return;
+            }
+
+            const date = new Date(dateInput.value + "T00:00:00");
+            const month = date.getMonth() + 1;
+
+            if ([3, 4, 5].includes(month)) {
+                seasonInput.value = "Summer";
+            }
+            else if ([6, 7, 8, 9].includes(month)) {
+                seasonInput.value = "Monsoon";
+            }
+            else {
+                seasonInput.value = "Winter";
+            }
+        }
+
+        dateInput.addEventListener("change", updateSeason);
+
+        // Set the minimum date to today.
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        dateInput.min = `${yyyy}-${mm}-${dd}`;
+
+    </script>
 
 </body>
 

@@ -1,13 +1,13 @@
 {
-    "product": "Printer",
+    "product": "Smartphone",
     "date": "2026-10-23",
     "category": "Electronics",
-    "price": 18587.0,
-    "discount": 0.0,
-    "current_stock": 269.0,
-    "lead_time": 8.0,
+    "price": 10692.0,
+    "discount": 14.98,
+    "current_stock": 55.0,
+    "lead_time": 10.0,
     "season": "Winter",
-    "predicted_demand": 65,
-    "risk": "Low Risk",
-    "reorder_quantity": 0
+    "predicted_demand": 117,
+    "risk": "High Risk",
+    "reorder_quantity": 85
 }

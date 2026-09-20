@@ -180,47 +180,47 @@ def predict():
 
     df = get_active_data()
 
-
     # Product list
     products = sorted(
-
         df["Product"]
         .dropna()
         .astype(str)
         .unique()
         .tolist()
-
     )
 
+    # Latest details for each product
+    product_details = {}
 
-    # Default values
+    for product_name in products:
+        product_rows = df[
+            df["Product"].astype(str) == product_name
+        ]
+
+        if not product_rows.empty:
+            row = product_rows.iloc[-1]
+            product_details[product_name] = {
+                "category": str(row["Category"]),
+                "price": float(row["Price"]),
+                "discount": float(row["Discount"]),
+                "current_stock": float(row["Current_Stock"]),
+                "lead_time": float(row["Lead_Time"])
+            }
 
     prediction = None
-
     recommendation = None
-
     risk = None
-
     reorder_quantity = 0
 
     selected_product = ""
-
     prediction_date = ""
-
     category = ""
-
     price = ""
-
     discount = ""
-
     current_stock = ""
-
     lead_time = ""
-
     season = ""
-
     error = None
-
 
     # =====================================================
     # POST
@@ -228,355 +228,247 @@ def predict():
 
     if request.method == "POST":
 
-
         selected_product = request.form.get(
-            "product",
-            ""
+            "product", ""
         ).strip()
-
 
         prediction_date = request.form.get(
-            "prediction_date",
-            ""
+            "prediction_date", ""
         ).strip()
 
+        # User-entered values. If empty, CSV defaults are used.
+        manual_category = request.form.get(
+            "category", ""
+        ).strip()
 
-        # -------------------------------------------------
+        manual_price = request.form.get(
+            "price", ""
+        ).strip()
+
+        manual_discount = request.form.get(
+            "discount", ""
+        ).strip()
+
+        manual_current_stock = request.form.get(
+            "current_stock", ""
+        ).strip()
+
+        manual_lead_time = request.form.get(
+            "lead_time", ""
+        ).strip()
+
+        # =================================================
         # PRODUCT VALIDATION
-        # -------------------------------------------------
+        # =================================================
 
         if not selected_product:
-
             error = "Please select a product."
 
+        elif selected_product not in product_details:
+            error = "Selected product was not found."
 
-        # -------------------------------------------------
+        # =================================================
         # DATE VALIDATION
-        # -------------------------------------------------
+        # =================================================
 
         elif not prediction_date:
-
             error = "Please select a prediction date."
-
 
         else:
 
             try:
-
                 selected_date = datetime.strptime(
                     prediction_date,
                     "%Y-%m-%d"
                 ).date()
 
-
                 today = date.today()
 
-
                 if selected_date < today:
-
                     error = (
                         "Please select today or a future "
                         "date for demand prediction."
                     )
 
-
             except ValueError:
-
                 error = (
-                    "Invalid date. "
-                    "Please select a valid date."
+                    "Invalid date. Please select a valid date."
                 )
 
-
         # =================================================
-        # GET PRODUCT DETAILS
+        # GET DEFAULT PRODUCT DETAILS
         # =================================================
 
         if error is None:
 
-
             product_rows = df[
-
-                df["Product"]
-                .astype(str)
-                == selected_product
-
+                df["Product"].astype(str) == selected_product
             ]
 
+            row = product_rows.iloc[-1]
 
-            if product_rows.empty:
+            default_category = row["Category"]
+            default_price = row["Price"]
+            default_discount = row["Discount"]
+            default_current_stock = row["Current_Stock"]
+            default_lead_time = row["Lead_Time"]
 
+            # Auto-fill values unless the user edited them.
+            category = (
+                manual_category
+                if manual_category
+                else str(default_category)
+            )
+
+            try:
+                price = (
+                    float(manual_price)
+                    if manual_price
+                    else float(default_price)
+                )
+
+                discount = (
+                    float(manual_discount)
+                    if manual_discount
+                    else float(default_discount)
+                )
+
+                current_stock = (
+                    float(manual_current_stock)
+                    if manual_current_stock
+                    else float(default_current_stock)
+                )
+
+                lead_time = (
+                    float(manual_lead_time)
+                    if manual_lead_time
+                    else float(default_lead_time)
+                )
+
+            except ValueError:
                 error = (
-                    "Selected product was not found."
+                    "Please enter valid numeric values for "
+                    "Price, Discount, Current Stock and Lead Time."
                 )
 
-
-            else:
-
-                # Latest available product record
-
-                row = product_rows.iloc[-1]
-
-
-                category = row["Category"]
-
-                price = row["Price"]
-
-                discount = row["Discount"]
-
-                current_stock = row["Current_Stock"]
-
-                lead_time = row["Lead_Time"]
-
-
-                # Season based on selected future date
-
-                season = get_season_from_date(
-                    selected_date
-                )
-
-
-                try:
-
-
-                    # =================================================
-                    # DATE FEATURES
-                    # =================================================
-
-                    day = selected_date.day
-
-                    day_of_week = (
-                        selected_date.weekday()
-                    )
-
-                    month = selected_date.month
-
-                    week_of_year = (
-                        selected_date.isocalendar().week
-                    )
-
-
-                    # =================================================
-                    # MODEL INPUT
-                    # =================================================
-
-                    input_data = pd.DataFrame([
-
-                        {
-
-                            "Product":
-                                selected_product,
-
-                            "Category":
-                                category,
-
-                            "Price":
-                                float(price),
-
-                            "Discount":
-                                float(discount),
-
-                            "Current_Stock":
-                                float(
-                                    current_stock
-                                ),
-
-                            "Lead_Time":
-                                float(
-                                    lead_time
-                                ),
-
-                            "Season":
-                                season,
-
-                            "Day":
-                                int(day),
-
-                            "DayOfWeek":
-                                int(
-                                    day_of_week
-                                ),
-
-                            "Month":
-                                int(month),
-
-                            "WeekOfYear":
-                                int(
-                                    week_of_year
-                                )
-
-                        }
-
-                    ])
-
-
-                    # =================================================
-                    # PREDICTION
-                    # =================================================
-
-                    prediction = round(
-
-                        float(
-
-                            model.predict(
-                                input_data
-                            )[0]
-
-                        )
-
-                    )
-
-
-                    if prediction < 0:
-
-                        prediction = 0
-
-
-                    # =================================================
-                    # RISK
-                    # =================================================
-
-                    risk = calculate_risk(
-
-                        float(current_stock),
-
-                        prediction
-
-                    )
-
-
-                    # =================================================
-                    # REORDER
-                    # =================================================
-
-                    reorder_quantity = (
-                        calculate_reorder(
-
-                            float(current_stock),
-
-                            prediction
-
-                        )
-                    )
-
-
-                    # =================================================
-                    # RECOMMENDATION
-                    # =================================================
-
-                    if reorder_quantity > 0:
-
-                        recommendation = (
-
-                            f"Recommended reorder quantity: "
-                            f"{reorder_quantity} units."
-
-                        )
-
-                    else:
-
-                        recommendation = (
-
-                            "No additional stock is required."
-
-                        )
-
-
-                    # =================================================
-                    # SAVE LAST PREDICTION
-                    # =================================================
-
-                    prediction_result = {
-
-                        "product":
-                            selected_product,
-
-                        "date":
-                            prediction_date,
-
-                        "category":
-                            str(category),
-
-                        "price":
-                            float(price),
-
-                        "discount":
-                            float(discount),
-
-                        "current_stock":
-                            float(current_stock),
-
-                        "lead_time":
-                            float(lead_time),
-
-                        "season":
-                            season,
-
-                        "predicted_demand":
-                            int(prediction),
-
-                        "risk":
-                            risk,
-
-                        "reorder_quantity":
-                            int(
-                                reorder_quantity
-                            )
-
+            # =================================================
+            # VALIDATION OF EDITABLE VALUES
+            # =================================================
+
+            if error is None:
+
+                if not category:
+                    error = "Category cannot be empty."
+
+                elif price < 0:
+                    error = "Price cannot be negative."
+
+                elif discount < 0 or discount > 100:
+                    error = "Discount must be between 0 and 100%."
+
+                elif current_stock < 0:
+                    error = "Current Stock cannot be negative."
+
+                elif lead_time < 0:
+                    error = "Lead Time cannot be negative."
+
+        # =================================================
+        # PREDICTION
+        # =================================================
+
+        if error is None:
+
+            season = get_season_from_date(selected_date)
+
+            try:
+
+                day = selected_date.day
+                day_of_week = selected_date.weekday()
+                month = selected_date.month
+                week_of_year = selected_date.isocalendar().week
+
+                input_data = pd.DataFrame([
+                    {
+                        "Product": selected_product,
+                        "Category": category,
+                        "Price": float(price),
+                        "Discount": float(discount),
+                        "Current_Stock": float(current_stock),
+                        "Lead_Time": float(lead_time),
+                        "Season": season,
+                        "Day": int(day),
+                        "DayOfWeek": int(day_of_week),
+                        "Month": int(month),
+                        "WeekOfYear": int(week_of_year)
                     }
+                ])
 
+                prediction = round(
+                    float(model.predict(input_data)[0])
+                )
 
-                    save_prediction(
-                        prediction_result
+                if prediction < 0:
+                    prediction = 0
+
+                risk = calculate_risk(
+                    float(current_stock),
+                    prediction
+                )
+
+                reorder_quantity = calculate_reorder(
+                    float(current_stock),
+                    prediction
+                )
+
+                if reorder_quantity > 0:
+                    recommendation = (
+                        f"Recommended reorder quantity: "
+                        f"{reorder_quantity} units."
+                    )
+                else:
+                    recommendation = (
+                        "No additional stock is required."
                     )
 
+                prediction_result = {
+                    "product": selected_product,
+                    "date": prediction_date,
+                    "category": str(category),
+                    "price": float(price),
+                    "discount": float(discount),
+                    "current_stock": float(current_stock),
+                    "lead_time": float(lead_time),
+                    "season": season,
+                    "predicted_demand": int(prediction),
+                    "risk": risk,
+                    "reorder_quantity": int(reorder_quantity)
+                }
 
-                except Exception as e:
+                save_prediction(prediction_result)
 
-                    error = (
-
-                        "Prediction could not be completed. "
-                        f"Error: {e}"
-
-                    )
-
-
-    # =====================================================
-    # PREDICTION PAGE
-    # =====================================================
+            except Exception as e:
+                error = (
+                    "Prediction could not be completed. "
+                    f"Error: {e}"
+                )
 
     return render_template(
-
         "predict.html",
-
         products=products,
-
+        product_details=product_details,
         prediction=prediction,
-
         recommendation=recommendation,
-
         risk=risk,
-
         reorder_quantity=reorder_quantity,
-
         selected_product=selected_product,
-
         prediction_date=prediction_date,
-
         category=category,
-
         price=price,
-
         discount=discount,
-
         current_stock=current_stock,
-
         lead_time=lead_time,
-
         season=season,
-
         error=error
-
     )
 
 
@@ -782,6 +674,62 @@ def dashboard():
         products
     )
 
+
+    # =====================================================
+    
+    # =====================================================
+    # TOP / LOW PERFORMING PRODUCTS
+    # =====================================================
+
+    # Performance is based on average Demand.
+    # Higher average demand = Top Performing.
+    # Lower average demand = Low Performing.
+    performance_summary = (
+        product_summary[["Product", "Demand"]]
+        .copy()
+        .sort_values("Demand", ascending=False)
+    )
+
+    top_products = []
+    for _, row in performance_summary.head(3).iterrows():
+        top_products.append({
+            "Product": row["Product"],
+            "Demand": round(float(row["Demand"]))
+        })
+
+    low_products = []
+    for _, row in performance_summary.tail(3).sort_values(
+        "Demand", ascending=True
+    ).iterrows():
+        low_products.append({
+            "Product": row["Product"],
+            "Demand": round(float(row["Demand"]))
+        })
+
+    # =====================================================
+    # DISCOUNT IMPACT ANALYSIS
+    # =====================================================
+
+    discount_summary = (
+        df.groupby("Discount", as_index=False)
+        .agg({"Demand": "mean"})
+        .sort_values("Discount")
+    )
+
+    discount_summary["Discount"] = discount_summary["Discount"].round(2)
+    discount_summary["Demand"] = discount_summary["Demand"].round(0)
+
+    discount_values = (
+        discount_summary["Discount"]
+        .astype(float)
+        .tolist()
+    )
+
+    discount_demands = (
+        discount_summary["Demand"]
+        .astype(float)
+        .tolist()
+    )
 
     # =====================================================
     # SEASONAL DEMAND ANALYSIS
@@ -1032,6 +980,18 @@ def dashboard():
 
         all_product_data=
             product_data,
+
+        top_products=
+            top_products,
+
+        low_products=
+            low_products,
+
+        discount_values=
+            discount_values,
+
+        discount_demands=
+            discount_demands,
 
         seasons=
             seasons,
