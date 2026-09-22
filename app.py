@@ -5,7 +5,6 @@ import os
 import json
 from datetime import datetime, date
 
-
 app = Flask(__name__)
 
 
@@ -14,11 +13,8 @@ app = Flask(__name__)
 # =========================================================
 
 MODEL_FILE = "model.pkl"
-
 HISTORICAL_DATA = "dataset/sales_data.csv"
-
 UPLOADED_DATA = "dataset/uploaded_sales_data.csv"
-
 PREDICTION_FILE = "prediction_result.json"
 
 
@@ -41,7 +37,6 @@ def get_active_data():
     if os.path.exists(UPLOADED_DATA):
 
         try:
-
             df = pd.read_csv(UPLOADED_DATA)
 
             if not df.empty:
@@ -59,11 +54,7 @@ def get_active_data():
 
 def save_prediction(result):
 
-    with open(
-        PREDICTION_FILE,
-        "w"
-    ) as file:
-
+    with open(PREDICTION_FILE, "w") as file:
         json.dump(
             result,
             file,
@@ -82,11 +73,7 @@ def load_prediction():
 
     try:
 
-        with open(
-            PREDICTION_FILE,
-            "r"
-        ) as file:
-
+        with open(PREDICTION_FILE, "r") as file:
             return json.load(file)
 
     except Exception:
@@ -104,17 +91,14 @@ def get_season_from_date(prediction_date):
 
     # March - May
     if month in [3, 4, 5]:
-
         return "Summer"
 
     # June - September
     elif month in [6, 7, 8, 9]:
-
         return "Monsoon"
 
     # October - February
     else:
-
         return "Winter"
 
 
@@ -150,10 +134,171 @@ def calculate_reorder(stock, demand):
     )
 
     if reorder_quantity < 0:
-
         reorder_quantity = 0
 
     return round(reorder_quantity)
+
+
+# =========================================================
+# FEATURE 10: AI SMART ALERTS
+# =========================================================
+
+def generate_smart_alerts(
+    prediction,
+    current_stock,
+    risk,
+    reorder_quantity,
+    supplier_risk,
+    lead_time_demand,
+    product_name,
+    active_df
+):
+    """
+    Generate dynamic decision-support alerts.
+
+    Alert priority:
+    1 = Critical
+    2 = Warning
+    3 = Demand
+    4 = Healthy
+    """
+
+    alerts = []
+
+    # =====================================================
+    # 1. CRITICAL ALERTS
+    # =====================================================
+
+    if risk == "High Risk":
+        alerts.append({
+            "type": "critical",
+            "priority": 1,
+            "icon": "🔴",
+            "title": "Urgent Stock-Out Alert",
+            "message": (
+                f"{product_name} has only "
+                f"{round(float(current_stock))} units available, "
+                f"while predicted demand is "
+                f"{round(float(prediction))} units."
+            )
+        })
+
+    if supplier_risk == "High Risk":
+        alerts.append({
+            "type": "critical",
+            "priority": 1,
+            "icon": "🚚",
+            "title": "Supplier Lead-Time Alert",
+            "message": (
+                f"Current stock may not cover the expected "
+                f"{round(float(lead_time_demand))} units of demand "
+                f"during supplier lead time."
+            )
+        })
+
+    # =====================================================
+    # 2. WARNING ALERTS
+    # =====================================================
+
+    if risk == "Medium Risk":
+        alerts.append({
+            "type": "warning",
+            "priority": 2,
+            "icon": "🟡",
+            "title": "Low Safety Stock Alert",
+            "message": (
+                f"{product_name} may have limited safety stock. "
+                f"Predicted demand is "
+                f"{round(float(prediction))} units with "
+                f"{round(float(current_stock))} units available."
+            )
+        })
+
+    if int(reorder_quantity) > 0:
+        alerts.append({
+            "type": "warning",
+            "priority": 2,
+            "icon": "📦",
+            "title": "Reorder Recommendation",
+            "message": (
+                f"Consider ordering "
+                f"{int(reorder_quantity)} additional units "
+                f"of {product_name}."
+            )
+        })
+
+    if supplier_risk == "Medium Risk":
+        alerts.append({
+            "type": "warning",
+            "priority": 2,
+            "icon": "🚚",
+            "title": "Supplier Safety Margin Alert",
+            "message": (
+                f"Stock is close to the expected "
+                f"{round(float(lead_time_demand))} units required "
+                f"during supplier lead time."
+            )
+        })
+
+    # =====================================================
+    # 3. DEMAND ALERTS
+    # =====================================================
+
+    try:
+        product_history = active_df[
+            active_df["Product"].astype(str) == str(product_name)
+        ]
+
+        if not product_history.empty:
+            historical_average = float(
+                product_history["Demand"].mean()
+            )
+
+            if (
+                historical_average > 0
+                and float(prediction) > historical_average * 1.20
+            ):
+                alerts.append({
+                    "type": "info",
+                    "priority": 3,
+                    "icon": "📈",
+                    "title": "High Demand Alert",
+                    "message": (
+                        f"Predicted demand of "
+                        f"{round(float(prediction))} units is more "
+                        f"than 20% above the historical average of "
+                        f"{round(historical_average)} units."
+                    )
+                })
+
+    except Exception:
+        pass
+
+    # =====================================================
+    # 4. HEALTHY STATUS
+    # =====================================================
+
+    # Show Healthy only when there are no critical, warning,
+    # or demand alerts.
+    if not alerts:
+        alerts.append({
+            "type": "success",
+            "priority": 4,
+            "icon": "🟢",
+            "title": "Inventory Level Healthy",
+            "message": (
+                f"{product_name} has sufficient stock and no "
+                f"major inventory or supplier warning was detected."
+            )
+        })
+
+    # =====================================================
+    # SORT BY PRIORITY
+    # =====================================================
+
+    alerts.sort(key=lambda item: item["priority"])
+
+    return alerts
 
 
 # =========================================================
@@ -180,7 +325,10 @@ def predict():
 
     df = get_active_data()
 
-    # Product list
+    # =====================================================
+    # PRODUCT LIST
+    # =====================================================
+
     products = sorted(
         df["Product"]
         .dropna()
@@ -189,37 +337,82 @@ def predict():
         .tolist()
     )
 
-    # Latest details for each product
+    # =====================================================
+    # LATEST DETAILS FOR EACH PRODUCT
+    # =====================================================
+
     product_details = {}
 
     for product_name in products:
+
         product_rows = df[
             df["Product"].astype(str) == product_name
         ]
 
         if not product_rows.empty:
+
             row = product_rows.iloc[-1]
+
             product_details[product_name] = {
-                "category": str(row["Category"]),
-                "price": float(row["Price"]),
-                "discount": float(row["Discount"]),
-                "current_stock": float(row["Current_Stock"]),
-                "lead_time": float(row["Lead_Time"])
+
+                "category": str(
+                    row["Category"]
+                ),
+
+                "price": float(
+                    row["Price"]
+                ),
+
+                "discount": float(
+                    row["Discount"]
+                ),
+
+                "current_stock": float(
+                    row["Current_Stock"]
+                ),
+
+                "lead_time": float(
+                    row["Lead_Time"]
+                )
             }
 
+    # =====================================================
+    # DEFAULT VALUES
+    # =====================================================
+
     prediction = None
+
     recommendation = None
+
     risk = None
+
     reorder_quantity = 0
 
+    # Feature 9 defaults
+    lead_time_demand = 0
+    supplier_risk = None
+    shipping_buffer = 2
+    estimated_delivery_days = 0
+
+    # Feature 10 defaults
+    smart_alerts = []
+
     selected_product = ""
+
     prediction_date = ""
+
     category = ""
+
     price = ""
+
     discount = ""
+
     current_stock = ""
+
     lead_time = ""
+
     season = ""
+
     error = None
 
     # =====================================================
@@ -229,32 +422,42 @@ def predict():
     if request.method == "POST":
 
         selected_product = request.form.get(
-            "product", ""
+            "product",
+            ""
         ).strip()
 
         prediction_date = request.form.get(
-            "prediction_date", ""
+            "prediction_date",
+            ""
         ).strip()
 
-        # User-entered values. If empty, CSV defaults are used.
+        # =================================================
+        # MANUAL / EDITABLE VALUES
+        # =================================================
+
         manual_category = request.form.get(
-            "category", ""
+            "category",
+            ""
         ).strip()
 
         manual_price = request.form.get(
-            "price", ""
+            "price",
+            ""
         ).strip()
 
         manual_discount = request.form.get(
-            "discount", ""
+            "discount",
+            ""
         ).strip()
 
         manual_current_stock = request.form.get(
-            "current_stock", ""
+            "current_stock",
+            ""
         ).strip()
 
         manual_lead_time = request.form.get(
-            "lead_time", ""
+            "lead_time",
+            ""
         ).strip()
 
         # =================================================
@@ -262,21 +465,31 @@ def predict():
         # =================================================
 
         if not selected_product:
-            error = "Please select a product."
+
+            error = (
+                "Please select a product."
+            )
 
         elif selected_product not in product_details:
-            error = "Selected product was not found."
+
+            error = (
+                "Selected product was not found."
+            )
 
         # =================================================
         # DATE VALIDATION
         # =================================================
 
         elif not prediction_date:
-            error = "Please select a prediction date."
+
+            error = (
+                "Please select a prediction date."
+            )
 
         else:
 
             try:
+
                 selected_date = datetime.strptime(
                     prediction_date,
                     "%Y-%m-%d"
@@ -285,12 +498,14 @@ def predict():
                 today = date.today()
 
                 if selected_date < today:
+
                     error = (
                         "Please select today or a future "
                         "date for demand prediction."
                     )
 
             except ValueError:
+
                 error = (
                     "Invalid date. Please select a valid date."
                 )
@@ -302,18 +517,26 @@ def predict():
         if error is None:
 
             product_rows = df[
-                df["Product"].astype(str) == selected_product
+                df["Product"].astype(str)
+                == selected_product
             ]
 
             row = product_rows.iloc[-1]
 
             default_category = row["Category"]
+
             default_price = row["Price"]
+
             default_discount = row["Discount"]
+
             default_current_stock = row["Current_Stock"]
+
             default_lead_time = row["Lead_Time"]
 
-            # Auto-fill values unless the user edited them.
+            # =================================================
+            # AUTO-FILL OR MANUAL VALUE
+            # =================================================
+
             category = (
                 manual_category
                 if manual_category
@@ -321,6 +544,7 @@ def predict():
             )
 
             try:
+
                 price = (
                     float(manual_price)
                     if manual_price
@@ -346,6 +570,7 @@ def predict():
                 )
 
             except ValueError:
+
                 error = (
                     "Please enter valid numeric values for "
                     "Price, Discount, Current Stock and Lead Time."
@@ -358,19 +583,34 @@ def predict():
             if error is None:
 
                 if not category:
-                    error = "Category cannot be empty."
+
+                    error = (
+                        "Category cannot be empty."
+                    )
 
                 elif price < 0:
-                    error = "Price cannot be negative."
+
+                    error = (
+                        "Price cannot be negative."
+                    )
 
                 elif discount < 0 or discount > 100:
-                    error = "Discount must be between 0 and 100%."
+
+                    error = (
+                        "Discount must be between 0 and 100%."
+                    )
 
                 elif current_stock < 0:
-                    error = "Current Stock cannot be negative."
+
+                    error = (
+                        "Current Stock cannot be negative."
+                    )
 
                 elif lead_time < 0:
-                    error = "Lead Time cannot be negative."
+
+                    error = (
+                        "Lead Time cannot be negative."
+                    )
 
         # =================================================
         # PREDICTION
@@ -378,42 +618,115 @@ def predict():
 
         if error is None:
 
-            season = get_season_from_date(selected_date)
+            season = get_season_from_date(
+                selected_date
+            )
 
             try:
 
                 day = selected_date.day
+
                 day_of_week = selected_date.weekday()
+
                 month = selected_date.month
-                week_of_year = selected_date.isocalendar().week
+
+                week_of_year = (
+                    selected_date.isocalendar().week
+                )
+
+                # =================================================
+                # MODEL INPUT
+                # =================================================
 
                 input_data = pd.DataFrame([
                     {
                         "Product": selected_product,
+
                         "Category": category,
+
                         "Price": float(price),
+
                         "Discount": float(discount),
-                        "Current_Stock": float(current_stock),
-                        "Lead_Time": float(lead_time),
+
+                        "Current_Stock": float(
+                            current_stock
+                        ),
+
+                        "Lead_Time": float(
+                            lead_time
+                        ),
+
                         "Season": season,
+
                         "Day": int(day),
-                        "DayOfWeek": int(day_of_week),
+
+                        "DayOfWeek": int(
+                            day_of_week
+                        ),
+
                         "Month": int(month),
-                        "WeekOfYear": int(week_of_year)
+
+                        "WeekOfYear": int(
+                            week_of_year
+                        )
                     }
                 ])
 
+                # =================================================
+                # ML PREDICTION
+                # =================================================
+
                 prediction = round(
-                    float(model.predict(input_data)[0])
+                    float(
+                        model.predict(
+                            input_data
+                        )[0]
+                    )
                 )
 
                 if prediction < 0:
                     prediction = 0
 
+                # =================================================
+                # FEATURE 9: SUPPLIER LEAD-TIME & DELIVERY RISK
+                # =================================================
+
+                # Estimated demand during the supplier lead time
+                lead_time_demand = round(
+                    prediction * float(lead_time)
+                )
+
+                # Compare current stock with the demand expected
+                # while waiting for the supplier.
+                if float(current_stock) < lead_time_demand:
+                    supplier_risk = "High Risk"
+
+                elif float(current_stock) <= lead_time_demand * 1.2:
+                    supplier_risk = "Medium Risk"
+
+                else:
+                    supplier_risk = "Low Risk"
+
+                # Estimated delivery time is the supplier lead time
+                # plus a 2-day processing/shipping buffer.
+                shipping_buffer = 2
+
+                estimated_delivery_days = round(
+                    float(lead_time) + shipping_buffer
+                )
+
+                # =================================================
+                # RISK
+                # =================================================
+
                 risk = calculate_risk(
                     float(current_stock),
                     prediction
                 )
+
+                # =================================================
+                # REORDER
+                # =================================================
 
                 reorder_quantity = calculate_reorder(
                     float(current_stock),
@@ -421,53 +734,144 @@ def predict():
                 )
 
                 if reorder_quantity > 0:
+
                     recommendation = (
                         f"Recommended reorder quantity: "
                         f"{reorder_quantity} units."
                     )
+
                 else:
+
                     recommendation = (
                         "No additional stock is required."
                     )
 
+                # =================================================
+                # FEATURE 10: AI SMART ALERTS
+                # =================================================
+
+                smart_alerts = generate_smart_alerts(
+                    prediction=prediction,
+                    current_stock=float(current_stock),
+                    risk=risk,
+                    reorder_quantity=reorder_quantity,
+                    supplier_risk=supplier_risk,
+                    lead_time_demand=lead_time_demand,
+                    product_name=selected_product,
+                    active_df=df
+                )
+
+                # =================================================
+                # SAVE PREDICTION
+                # =================================================
+
                 prediction_result = {
+
                     "product": selected_product,
+
                     "date": prediction_date,
+
                     "category": str(category),
+
                     "price": float(price),
+
                     "discount": float(discount),
-                    "current_stock": float(current_stock),
-                    "lead_time": float(lead_time),
+
+                    "current_stock": float(
+                        current_stock
+                    ),
+
+                    "lead_time": float(
+                        lead_time
+                    ),
+
                     "season": season,
-                    "predicted_demand": int(prediction),
+
+                    "predicted_demand": int(
+                        prediction
+                    ),
+
                     "risk": risk,
-                    "reorder_quantity": int(reorder_quantity)
+
+                    "reorder_quantity": int(
+                        reorder_quantity
+                    ),
+
+                    # Feature 9
+                    "lead_time_demand": int(
+                        lead_time_demand
+                    ),
+
+                    "supplier_risk": supplier_risk,
+
+                    "shipping_buffer_days": int(
+                        shipping_buffer
+                    ),
+
+                    "estimated_delivery_days": int(
+                        estimated_delivery_days
+                    ),
+
+                    # Feature 10
+                    "smart_alerts": smart_alerts
                 }
 
-                save_prediction(prediction_result)
+                save_prediction(
+                    prediction_result
+                )
 
             except Exception as e:
+
                 error = (
                     "Prediction could not be completed. "
                     f"Error: {e}"
                 )
 
+    # =====================================================
+    # RETURN PREDICTION PAGE
+    # =====================================================
+
     return render_template(
+
         "predict.html",
+
         products=products,
+
         product_details=product_details,
+
         prediction=prediction,
+
         recommendation=recommendation,
+
         risk=risk,
+
         reorder_quantity=reorder_quantity,
+
+        # Feature 9
+        lead_time_demand=lead_time_demand,
+        supplier_risk=supplier_risk,
+        shipping_buffer=shipping_buffer,
+        estimated_delivery_days=estimated_delivery_days,
+
+        # Feature 10
+        smart_alerts=smart_alerts,
+
         selected_product=selected_product,
+
         prediction_date=prediction_date,
+
         category=category,
+
         price=price,
+
         discount=discount,
+
         current_stock=current_stock,
+
         lead_time=lead_time,
+
         season=season,
+
         error=error
     )
 
@@ -483,7 +887,6 @@ def predict():
 def dashboard():
 
     df = get_active_data()
-
 
     # =====================================================
     # PRODUCT SUMMARY
@@ -510,7 +913,6 @@ def dashboard():
 
     )
 
-
     product_summary[
         "Current_Stock"
     ] = (
@@ -522,7 +924,6 @@ def dashboard():
         .round(0)
 
     )
-
 
     product_summary[
         "Demand"
@@ -536,9 +937,23 @@ def dashboard():
 
     )
 
+    # =====================================================
+    # LOAD LATEST PREDICTION
+    # =====================================================
+
+    last_prediction = (
+        load_prediction()
+    )
 
     # =====================================================
     # RISK COUNTERS
+    #
+    # IMPORTANT CHANGE:
+    #
+    # These cards now show the risk of the LATEST
+    # PREDICTED PRODUCT.
+    #
+    # They do NOT count all 9 historical products.
     # =====================================================
 
     high_risk_count = 0
@@ -547,83 +962,76 @@ def dashboard():
 
     low_risk_count = 0
 
+    if last_prediction:
 
-    product_data = []
+        latest_risk = (
+            last_prediction.get(
+                "risk",
+                ""
+            )
+        )
 
+        if latest_risk == "High Risk":
+
+            high_risk_count = 1
+
+        elif latest_risk == "Medium Risk":
+
+            medium_risk_count = 1
+
+        elif latest_risk == "Low Risk":
+
+            low_risk_count = 1
 
     # =====================================================
     # ALL PRODUCT ANALYSIS
+    #
+    # Kept unchanged for existing dashboard charts/table.
     # =====================================================
+
+    product_data = []
 
     for _, row in product_summary.iterrows():
 
-
         product = row["Product"]
-
 
         stock = float(
             row["Current_Stock"]
         )
 
-
         demand = float(
             row["Demand"]
         )
 
-
-        risk = calculate_risk(
-
+        historical_risk = calculate_risk(
             stock,
-
             demand
-
         )
-
 
         reorder_quantity = calculate_reorder(
-
             stock,
-
             demand
-
         )
-
-
-        if risk == "High Risk":
-
-            high_risk_count += 1
-
-        elif risk == "Medium Risk":
-
-            medium_risk_count += 1
-
-        else:
-
-            low_risk_count += 1
-
 
         product_data.append({
 
-            "Product":
-                product,
+            "Product": product,
 
-            "Category":
-                row["Category"],
+            "Category": row["Category"],
 
-            "Current_Stock":
-                round(stock),
+            "Current_Stock": round(
+                stock
+            ),
 
-            "Demand":
-                round(demand),
+            "Demand": round(
+                demand
+            ),
 
-            "Risk":
-                risk,
+            "Risk": historical_risk,
 
-            "Reorder":
-                reorder_quantity
+            "Reorder": reorder_quantity
 
         })
-
 
     # =====================================================
     # GRAPH DATA
@@ -639,7 +1047,6 @@ def dashboard():
 
     )
 
-
     stocks = (
 
         product_summary[
@@ -653,7 +1060,6 @@ def dashboard():
         .tolist()
 
     )
-
 
     demands = (
 
@@ -669,41 +1075,79 @@ def dashboard():
 
     )
 
-
     total_products = len(
         products
     )
 
-
-    # =====================================================
-    
     # =====================================================
     # TOP / LOW PERFORMING PRODUCTS
     # =====================================================
 
-    # Performance is based on average Demand.
-    # Higher average demand = Top Performing.
-    # Lower average demand = Low Performing.
     performance_summary = (
-        product_summary[["Product", "Demand"]]
+
+        product_summary[
+            [
+                "Product",
+                "Demand"
+            ]
+        ]
+
         .copy()
-        .sort_values("Demand", ascending=False)
+
+        .sort_values(
+            "Demand",
+            ascending=False
+        )
+
     )
 
     top_products = []
-    for _, row in performance_summary.head(3).iterrows():
+
+    for _, row in (
+        performance_summary
+        .head(3)
+        .iterrows()
+    ):
+
         top_products.append({
+
             "Product": row["Product"],
-            "Demand": round(float(row["Demand"]))
+
+            "Demand": round(
+                float(
+                    row["Demand"]
+                )
+            )
+
         })
 
     low_products = []
-    for _, row in performance_summary.tail(3).sort_values(
-        "Demand", ascending=True
-    ).iterrows():
+
+    for _, row in (
+
+        performance_summary
+
+        .tail(3)
+
+        .sort_values(
+            "Demand",
+            ascending=True
+        )
+
+        .iterrows()
+
+    ):
+
         low_products.append({
+
             "Product": row["Product"],
-            "Demand": round(float(row["Demand"]))
+
+            "Demand": round(
+                float(
+                    row["Demand"]
+                )
+            )
+
         })
 
     # =====================================================
@@ -711,24 +1155,70 @@ def dashboard():
     # =====================================================
 
     discount_summary = (
-        df.groupby("Discount", as_index=False)
-        .agg({"Demand": "mean"})
-        .sort_values("Discount")
+
+        df
+
+        .groupby(
+            "Discount",
+            as_index=False
+        )
+
+        .agg({
+            "Demand": "mean"
+        })
+
+        .sort_values(
+            "Discount"
+        )
+
     )
 
-    discount_summary["Discount"] = discount_summary["Discount"].round(2)
-    discount_summary["Demand"] = discount_summary["Demand"].round(0)
+    discount_summary[
+        "Discount"
+    ] = (
+
+        discount_summary[
+            "Discount"
+        ]
+
+        .round(2)
+
+    )
+
+    discount_summary[
+        "Demand"
+    ] = (
+
+        discount_summary[
+            "Demand"
+        ]
+
+        .round(0)
+
+    )
 
     discount_values = (
-        discount_summary["Discount"]
+
+        discount_summary[
+            "Discount"
+        ]
+
         .astype(float)
+
         .tolist()
+
     )
 
     discount_demands = (
-        discount_summary["Demand"]
+
+        discount_summary[
+            "Demand"
+        ]
+
         .astype(float)
+
         .tolist()
+
     )
 
     # =====================================================
@@ -745,13 +1235,10 @@ def dashboard():
         )
 
         .agg({
-
             "Demand": "mean"
-
         })
 
     )
-
 
     season_summary[
         "Demand"
@@ -765,7 +1252,6 @@ def dashboard():
 
     )
 
-
     season_order = [
 
         "Winter",
@@ -775,7 +1261,6 @@ def dashboard():
         "Monsoon"
 
     ]
-
 
     season_summary[
         "Season"
@@ -791,12 +1276,15 @@ def dashboard():
 
     )
 
-
     season_summary = (
-        season_summary
-        .sort_values("Season")
-    )
 
+        season_summary
+
+        .sort_values(
+            "Season"
+        )
+
+    )
 
     seasons = (
 
@@ -810,7 +1298,6 @@ def dashboard():
 
     )
 
-
     season_demands = (
 
         season_summary[
@@ -823,25 +1310,21 @@ def dashboard():
 
     )
 
-
     # =====================================================
     # HIGHEST SEASON
     # =====================================================
 
-    if len(season_demands) > 0:
+    if len(
+        season_demands
+    ) > 0:
 
         highest_index = (
-
             season_demands.index(
-
                 max(
                     season_demands
                 )
-
             )
-
         )
-
 
         highest_demand_season = (
 
@@ -850,7 +1333,6 @@ def dashboard():
             ]
 
         )
-
 
         highest_season_demand = (
 
@@ -866,56 +1348,117 @@ def dashboard():
 
         highest_season_demand = 0
 
-
     # =====================================================
-    # LAST PREDICTION
+    # FEATURE 9: LATEST SUPPLIER & DELIVERY ANALYSIS
     # =====================================================
 
-    last_prediction = (
-        load_prediction()
-    )
+    supplier_analysis = None
+    smart_alerts_dashboard = []
 
+    if last_prediction:
+        supplier_analysis = {
+            "product": last_prediction.get("product", "N/A"),
+            "predicted_demand": last_prediction.get(
+                "predicted_demand", 0
+            ),
+            "current_stock": last_prediction.get(
+                "current_stock", 0
+            ),
+            "lead_time": last_prediction.get(
+                "lead_time", 0
+            ),
+            "lead_time_demand": last_prediction.get(
+                "lead_time_demand", 0
+            ),
+            "estimated_delivery_days": last_prediction.get(
+                "estimated_delivery_days", 0
+            ),
+            "supplier_risk": last_prediction.get(
+                "supplier_risk", "N/A"
+            )
+        }
+
+        smart_alerts_dashboard = last_prediction.get(
+            "smart_alerts", []
+        )
+
+        # Backward compatibility for an older prediction file.
+        if not smart_alerts_dashboard:
+            try:
+                smart_alerts_dashboard = generate_smart_alerts(
+                    prediction=float(
+                        last_prediction.get("predicted_demand", 0)
+                    ),
+                    current_stock=float(
+                        last_prediction.get("current_stock", 0)
+                    ),
+                    risk=last_prediction.get("risk", ""),
+                    reorder_quantity=int(
+                        last_prediction.get("reorder_quantity", 0)
+                    ),
+                    supplier_risk=last_prediction.get(
+                        "supplier_risk", ""
+                    ),
+                    lead_time_demand=float(
+                        last_prediction.get("lead_time_demand", 0)
+                    ),
+                    product_name=last_prediction.get(
+                        "product", ""
+                    ),
+                    active_df=df
+                )
+            except Exception:
+                smart_alerts_dashboard = []
 
     # =====================================================
     # SELECTED PRODUCT TABLE
+    #
+    # Shows the latest predicted product.
     # =====================================================
 
     selected_product_data = []
 
-
     if last_prediction:
 
-
         selected_product_name = (
-            last_prediction["product"]
+
+            last_prediction[
+                "product"
+            ]
+
         )
 
-
         selected_stock = float(
+
             last_prediction[
                 "current_stock"
             ]
+
         )
 
-
         selected_predicted_demand = float(
+
             last_prediction[
                 "predicted_demand"
             ]
-        )
 
+        )
 
         selected_risk = (
-            last_prediction["risk"]
+
+            last_prediction[
+                "risk"
+            ]
+
         )
 
-
         selected_reorder = int(
+
             last_prediction[
                 "reorder_quantity"
             ]
-        )
 
+        )
 
         selected_product_data.append({
 
@@ -945,7 +1488,6 @@ def dashboard():
 
         })
 
-
     # =====================================================
     # DASHBOARD
     # =====================================================
@@ -957,6 +1499,7 @@ def dashboard():
         total_products=
             total_products,
 
+        # Latest prediction based risk cards
         high_risk=
             high_risk_count,
 
@@ -1006,8 +1549,15 @@ def dashboard():
             highest_season_demand,
 
         last_prediction=
-            last_prediction
+            last_prediction,
 
+        # Feature 9
+        supplier_analysis=
+            supplier_analysis,
+
+        # Feature 10
+        smart_alerts=
+            smart_alerts_dashboard
     )
 
 
@@ -1021,7 +1571,6 @@ def dashboard():
 )
 def upload():
 
-
     if request.method == "GET":
 
         return render_template(
@@ -1034,24 +1583,26 @@ def upload():
 
         )
 
-
     file = request.files.get(
         "file"
     )
 
-
-    if file is None or file.filename == "":
+    if (
+        file is None
+        or file.filename == ""
+    ):
 
         return render_template(
 
             "upload.html",
 
-            error="Please select a CSV file.",
+            error=(
+                "Please select a CSV file."
+            ),
 
             success=None
 
         )
-
 
     if not file.filename.lower().endswith(
         ".csv"
@@ -1070,10 +1621,11 @@ def upload():
 
         )
 
-
     try:
 
-        df = pd.read_csv(file)
+        df = pd.read_csv(
+            file
+        )
 
     except Exception as e:
 
@@ -1090,19 +1642,23 @@ def upload():
 
         )
 
-
     if df.empty:
 
         return render_template(
 
             "upload.html",
 
-            error="The uploaded CSV is empty.",
+            error=(
+                "The uploaded CSV is empty."
+            ),
 
             success=None
 
         )
 
+    # =====================================================
+    # REQUIRED COLUMNS
+    # =====================================================
 
     required_columns = [
 
@@ -1124,7 +1680,6 @@ def upload():
 
     ]
 
-
     missing_columns = [
 
         column
@@ -1134,7 +1689,6 @@ def upload():
         if column not in df.columns
 
     ]
-
 
     if missing_columns:
 
@@ -1156,9 +1710,11 @@ def upload():
 
         )
 
+    # =====================================================
+    # BLANK VALUES
+    # =====================================================
 
     blank_columns = []
-
 
     for column in required_columns:
 
@@ -1171,9 +1727,13 @@ def upload():
         elif (
 
             df[column]
+
             .astype(str)
+
             .str.strip()
+
             .eq("")
+
             .any()
 
         ):
@@ -1181,7 +1741,6 @@ def upload():
             blank_columns.append(
                 column
             )
-
 
     if blank_columns:
 
@@ -1203,6 +1762,9 @@ def upload():
 
         )
 
+    # =====================================================
+    # NUMERIC VALIDATION
+    # =====================================================
 
     numeric_columns = [
 
@@ -1218,9 +1780,7 @@ def upload():
 
     ]
 
-
     invalid_numeric = []
-
 
     for column in numeric_columns:
 
@@ -1232,13 +1792,11 @@ def upload():
 
         )
 
-
         if converted.isna().any():
 
             invalid_numeric.append(
                 column
             )
-
 
     if invalid_numeric:
 
@@ -1260,13 +1818,15 @@ def upload():
 
         )
 
-
     for column in numeric_columns:
 
         df[column] = pd.to_numeric(
             df[column]
         )
 
+    # =====================================================
+    # DISCOUNT VALIDATION
+    # =====================================================
 
     if (
         df["Discount"] > 100
@@ -1284,6 +1844,9 @@ def upload():
 
         )
 
+    # =====================================================
+    # NEGATIVE VALUES
+    # =====================================================
 
     if (
         df[numeric_columns] < 0
@@ -1301,12 +1864,14 @@ def upload():
 
         )
 
+    # =====================================================
+    # SAVE UPLOADED DATA
+    # =====================================================
 
     os.makedirs(
         "dataset",
         exist_ok=True
     )
-
 
     df.to_csv(
 
@@ -1316,11 +1881,9 @@ def upload():
 
     )
 
-
     print(
         "Latest CSV uploaded successfully!"
     )
-
 
     return redirect(
         url_for("predict")

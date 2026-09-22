@@ -239,6 +239,145 @@
             font-weight: bold;
         }
 
+        /* FEATURE 9: SUPPLIER & DELIVERY ANALYSIS */
+
+        .supplier-card {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .supplier-card h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .supplier-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .supplier-item {
+            background: white;
+            padding: 13px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .supplier-label {
+            display: block;
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .supplier-value {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .supplier-risk {
+            margin-top: 15px;
+            padding: 13px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .supplier-risk-high {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .supplier-risk-medium {
+            background: #fef9c3;
+            color: #a16207;
+        }
+
+        .supplier-risk-low {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        /* FEATURE 10: AI SMART ALERTS */
+
+        .smart-alerts-card {
+            margin-top: 20px;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .smart-alerts-card h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .smart-alert {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 13px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 5px solid;
+        }
+
+        .smart-alert:last-child {
+            margin-bottom: 0;
+        }
+
+        .smart-alert-icon {
+            font-size: 19px;
+            line-height: 1.2;
+        }
+
+        .smart-alert-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .smart-alert-message {
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .smart-alert-critical {
+            background: #fef2f2;
+            border-left-color: #dc2626;
+            color: #991b1b;
+        }
+
+        .smart-alert-warning {
+            background: #fffbeb;
+            border-left-color: #d97706;
+            color: #92400e;
+        }
+
+        .smart-alert-success {
+            background: #f0fdf4;
+            border-left-color: #16a34a;
+            color: #166534;
+        }
+
+        .smart-alert-info {
+            background: #eff6ff;
+            border-left-color: #2563eb;
+            color: #1e40af;
+        }
+
+        @media (max-width: 700px) {
+            .supplier-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* GRID */
 
         .grid {
@@ -640,6 +779,134 @@
                 <div class="recommendation">
 
                     📦 {{ recommendation }}
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- FEATURE 9: SUPPLIER & DELIVERY ANALYSIS -->
+
+                <div class="supplier-card">
+
+                    <h3>🚚 Supplier & Delivery Analysis</h3>
+
+                    <div class="supplier-grid">
+
+                        <div class="supplier-item">
+                            <span class="supplier-label">
+                                Product
+                            </span>
+                            <span class="supplier-value">
+                                {{ selected_product }}
+                            </span>
+                        </div>
+
+                        <div class="supplier-item">
+                            <span class="supplier-label">
+                                Predicted Demand
+                            </span>
+                            <span class="supplier-value">
+                                {{ prediction }} units/day
+                            </span>
+                        </div>
+
+                        <div class="supplier-item">
+                            <span class="supplier-label">
+                                Current Stock
+                            </span>
+                            <span class="supplier-value">
+                                {{ current_stock }} units
+                            </span>
+                        </div>
+
+                        <div class="supplier-item">
+                            <span class="supplier-label">
+                                Supplier Lead Time
+                            </span>
+                            <span class="supplier-value">
+                                {{ lead_time }} days
+                            </span>
+                        </div>
+
+                        <div class="supplier-item">
+                            <span class="supplier-label">
+                                Demand During Lead Time
+                            </span>
+                            <span class="supplier-value">
+                                {{ lead_time_demand }} units
+                            </span>
+                        </div>
+
+                        <div class="supplier-item">
+                            <span class="supplier-label">
+                                Estimated Delivery
+                            </span>
+                            <span class="supplier-value">
+                                {{ estimated_delivery_days }} days
+                            </span>
+                        </div>
+
+                    </div>
+
+                    {% if supplier_risk == "High Risk" %}
+
+                    <div class="supplier-risk supplier-risk-high">
+                        🔴 Supplier Risk: High Risk
+                    </div>
+
+                    {% elif supplier_risk == "Medium Risk" %}
+
+                    <div class="supplier-risk supplier-risk-medium">
+                        🟡 Supplier Risk: Medium Risk
+                    </div>
+
+                    {% elif supplier_risk == "Low Risk" %}
+
+                    <div class="supplier-risk supplier-risk-low">
+                        🟢 Supplier Risk: Low Risk
+                    </div>
+
+                    {% endif %}
+
+                    <div class="recommendation">
+                        🚚 Estimated delivery includes
+                        {{ shipping_buffer }} days processing/shipping buffer.
+                    </div>
+
+                </div>
+
+                <!-- FEATURE 10: AI SMART ALERTS -->
+
+                {% if smart_alerts %}
+
+                <div class="smart-alerts-card">
+
+                    <h3>🚨 AI Smart Alerts</h3>
+
+                    {% for alert in smart_alerts %}
+
+                    <div class="smart-alert smart-alert-{{ alert.type }}">
+
+                        <div class="smart-alert-icon">
+                            {{ alert.icon }}
+                        </div>
+
+                        <div>
+
+                            <div class="smart-alert-title">
+                                {{ alert.title }}
+                            </div>
+
+                            <div class="smart-alert-message">
+                                {{ alert.message }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
 
                 </div>
 

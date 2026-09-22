@@ -1,13 +1,40 @@
 {
-    "product": "Smartphone",
-    "date": "2026-10-23",
+    "product": "Monitor",
+    "date": "2028-12-12",
     "category": "Electronics",
-    "price": 10692.0,
-    "discount": 14.98,
-    "current_stock": 55.0,
-    "lead_time": 10.0,
+    "price": 16517.0,
+    "discount": 15.0,
+    "current_stock": 81.0,
+    "lead_time": 5.0,
     "season": "Winter",
-    "predicted_demand": 117,
+    "predicted_demand": 102,
     "risk": "High Risk",
-    "reorder_quantity": 85
+    "reorder_quantity": 41,
+    "lead_time_demand": 510,
+    "supplier_risk": "High Risk",
+    "shipping_buffer_days": 2,
+    "estimated_delivery_days": 7,
+    "smart_alerts": [
+        {
+            "type": "critical",
+            "priority": 1,
+            "icon": "\ud83d\udd34",
+            "title": "Urgent Stock-Out Alert",
+            "message": "Monitor has only 81 units available, while predicted demand is 102 units."
+        },
+        {
+            "type": "critical",
+            "priority": 1,
+            "icon": "\ud83d\ude9a",
+            "title": "Supplier Lead-Time Alert",
+            "message": "Current stock may not cover the expected 510 units of demand during supplier lead time."
+        },
+        {
+            "type": "warning",
+            "priority": 2,
+            "icon": "\ud83d\udce6",
+            "title": "Reorder Recommendation",
+            "message": "Consider ordering 41 additional units of Monitor."
+        }
+    ]
 }
