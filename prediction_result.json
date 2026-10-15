@@ -1,40 +1,26 @@
 {
-    "product": "Monitor",
+    "product": "Laptop",
     "date": "2028-12-12",
     "category": "Electronics",
-    "price": 16517.0,
-    "discount": 15.0,
-    "current_stock": 81.0,
-    "lead_time": 5.0,
+    "price": 69549.0,
+    "discount": 5.0,
+    "current_stock": 233.0,
+    "lead_time": 1.0,
     "season": "Winter",
-    "predicted_demand": 102,
-    "risk": "High Risk",
-    "reorder_quantity": 41,
-    "lead_time_demand": 510,
-    "supplier_risk": "High Risk",
+    "predicted_demand": 51,
+    "risk": "Low Risk",
+    "reorder_quantity": 0,
+    "lead_time_demand": 51,
+    "supplier_risk": "Low Risk",
     "shipping_buffer_days": 2,
-    "estimated_delivery_days": 7,
+    "estimated_delivery_days": 3,
     "smart_alerts": [
         {
-            "type": "critical",
-            "priority": 1,
-            "icon": "\ud83d\udd34",
-            "title": "Urgent Stock-Out Alert",
-            "message": "Monitor has only 81 units available, while predicted demand is 102 units."
-        },
-        {
-            "type": "critical",
-            "priority": 1,
-            "icon": "\ud83d\ude9a",
-            "title": "Supplier Lead-Time Alert",
-            "message": "Current stock may not cover the expected 510 units of demand during supplier lead time."
-        },
-        {
-            "type": "warning",
-            "priority": 2,
-            "icon": "\ud83d\udce6",
-            "title": "Reorder Recommendation",
-            "message": "Consider ordering 41 additional units of Monitor."
+            "type": "success",
+            "priority": 4,
+            "icon": "\ud83d\udfe2",
+            "title": "Inventory Level Healthy",
+            "message": "Laptop has sufficient stock and no major inventory or supplier warning was detected."
         }
     ]
 }
